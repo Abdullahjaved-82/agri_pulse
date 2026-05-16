@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+New-Item -Path "D:\AGRI_PULSE\.env" -ItemType File -Force
+notepad "D:\AGRI_PULSE\.env"
+# Env files (do not commit secrets)
+.env
+.env.*

@@ -24,6 +24,20 @@ Smart Agricultural Market Intelligence app for farmers and traders in Pakistan.
 - `flutter_launcher_icons` (dev)
 - `flutter_local_notifications`
 
+## Environment Setup
+
+Create a local `.env` file at the project root (not committed):
+
+```dotenv
+WEATHER_API_KEY=your_weatherapi_key
+GROQ_API_KEY=your_groq_api_key
+```
+
+## Services
+
+- `lib/services/weather_service.dart` loads live forecasts from WeatherAPI.
+- `lib/services/groq_service.dart` provides AI recommendations via Groq.
+
 ## Run Locally
 
 ```powershell

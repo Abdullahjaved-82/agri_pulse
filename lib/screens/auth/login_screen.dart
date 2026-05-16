@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:agri_pulse/screens/home/home_screen.dart';
 import 'package:agri_pulse/utils/colors.dart';
 import 'package:agri_pulse/utils/constants.dart';
-
 import '../../main.dart';
+import '../../services/auth_service.dart';
+import '../../utils/language_provider.dart';
 import 'signup_screen.dart';
+
+const Color _deep        = Color(0xFF1B4332);
+const Color _bright      = Color(0xFF40916C);
+const Color _fieldBg     = Color(0xFFF6FBF8);
+const Color _fieldBorder = Color(0xFFD4E8DB);
 
 class LoginScreen extends StatefulWidget {
   static const String routeName = '/login';
-
   const LoginScreen({super.key});
 
   @override
@@ -17,231 +23,180 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  final TextEditingController _emailController    = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    final String email    = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showSnack('Enter email and password to continue.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await _authService.signIn(email: email, password: password);
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+    } catch (error) {
+      if (mounted) _showSnack(_authService.readableError(error));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showSnack(String msg) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
 
   @override
   Widget build(BuildContext context) {
+    final bool isUrdu = LanguageScope.of(context).isUrdu;
+    
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        automaticallyImplyLeading: false,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Column(
-            children: [
-              SizedBox(
-                height: constraints.maxHeight * 0.4,
-                child: const _AuthHeader(title: 'Welcome Back!'),
-              ),
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(30),
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Fixed header — never pushed by keyboard
+            _WaveHeader(title: isUrdu ? 'خوش آمدید!' : 'Welcome Back!'),
+
+            // Scrollable form — handles keyboard inset safely
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isUrdu ? 'ایگری پلس میں لاگ ان کریں' : 'Login to AgriPulse',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        color: _deep,
+                      ),
                     ),
-                  ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Login to AgriPulse',
-                          style: TextStyle(
-                            color: kTextDark,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        TextField(
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            hintText: 'Email Address',
-                            prefixIcon: const Icon(Icons.email_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                kDefaultBorderRadius,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        TextField(
-                          obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            hintText: 'Password',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                              ),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                kDefaultBorderRadius,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.pushNamed(
-                                context,
-                                MyApp.forgotPasswordRoute,
-                              );
-                            },
-                            child: const Text(
-                              'Forgot Password?',
-                              style: TextStyle(color: kSecondaryColor),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(
-                                context,
-                                HomeScreen.routeName,
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kPrimaryColor,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: const Text(
-                              'Login',
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            const Expanded(child: Divider()),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 10),
-                              child: Text(
-                                'OR',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            const Expanded(child: Divider()),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(
-                                context,
-                                HomeScreen.routeName,
-                              );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: kSecondaryColor),
-                              foregroundColor: kSecondaryColor,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  kDefaultBorderRadius,
-                                ),
-                              ),
-                            ),
-                            child: const Text('Continue as Guest'),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text("Don't have an account?"),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  SignupScreen.routeName,
-                                );
-                              },
-                              child: const Text(
-                                'Sign Up',
-                                style: TextStyle(color: kSecondaryColor),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                    const SizedBox(height: 22),
+
+                    _AgriField(
+                      controller: _emailController,
+                      hint: isUrdu ? 'ای میل ایڈریس' : 'Email Address',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
                     ),
-                  ),
+                    const SizedBox(height: 14),
+                    _AgriField(
+                      controller: _passwordController,
+                      hint: isUrdu ? 'پاس ورڈ' : 'Password',
+                      icon: Icons.lock_outline,
+                      obscure: _obscurePassword,
+                      onToggleObscure: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () => Navigator.pushNamed(
+                            context, MyApp.forgotPasswordRoute),
+                        style: TextButton.styleFrom(
+                          foregroundColor: _bright,
+                          padding: const EdgeInsets.only(top: 2, bottom: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          isUrdu ? 'پاس ورڈ بھول گئے؟' : 'Forgot Password?',
+                          style: GoogleFonts.dmSans(fontSize: 13),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+                    _PrimaryButton(
+                      label: isUrdu ? 'لاگ ان کریں' : 'Login',
+                      isLoading: _isLoading,
+                      onPressed: _handleLogin,
+                    ),
+                    const SizedBox(height: 20),
+
+                    _FooterRow(
+                      question: isUrdu ? "اکاؤنٹ نہیں ہے؟" : "Don't have an account?",
+                      action: isUrdu ? 'سائن اپ کریں' : 'Sign Up',
+                      onTap: _isLoading
+                          ? null
+                          : () => Navigator.pushNamed(
+                          context, SignupScreen.routeName),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          );
-        },
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _AuthHeader extends StatelessWidget {
+class _WaveHeader extends StatelessWidget {
   final String title;
 
-  const _AuthHeader({required this.title});
+  const _WaveHeader({required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 220,
       width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [kPrimaryColor, kSecondaryColor],
+        ),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.elliptical(600, 110),
         ),
       ),
       child: SafeArea(
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 94,
-                height: 94,
+                width: 86,
+                height: 86,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.16),
+                  color: Colors.white.withValues(alpha: 0.18),
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
-                  child: Text('🌾', style: TextStyle(fontSize: 52)),
+                  child: Text('🌾', style: TextStyle(fontSize: 44)),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
+                style: GoogleFonts.dmSans(
+                  fontSize: 24,
                   fontWeight: FontWeight.w700,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -251,3 +206,127 @@ class _AuthHeader extends StatelessWidget {
     );
   }
 }
+
+class _AgriField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final bool obscure;
+  final VoidCallback? onToggleObscure;
+
+  const _AgriField({
+    required this.controller,
+    required this.hint,
+    required this.icon,
+    this.keyboardType,
+    this.obscure = false,
+    this.onToggleObscure,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscure,
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: _fieldBg,
+        prefixIcon: Icon(icon, color: _bright),
+        suffixIcon: onToggleObscure == null
+            ? null
+            : IconButton(
+                onPressed: onToggleObscure,
+                icon: Icon(
+                  obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  color: _bright,
+                ),
+              ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+          borderSide: const BorderSide(color: _fieldBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+          borderSide: const BorderSide(color: _fieldBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+          borderSide: const BorderSide(color: kSecondaryColor, width: 1.4),
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onPressed;
+
+  const _PrimaryButton({
+    required this.label,
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: kPrimaryColor,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+          ),
+        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+      ),
+    );
+  }
+}
+
+class _FooterRow extends StatelessWidget {
+  final String question;
+  final String action;
+  final VoidCallback? onTap;
+
+  const _FooterRow({
+    required this.question,
+    required this.action,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(question, style: GoogleFonts.dmSans(fontSize: 13)),
+        TextButton(
+          onPressed: onTap,
+          style: TextButton.styleFrom(foregroundColor: _bright),
+          child: Text(action, style: GoogleFonts.dmSans(fontSize: 13)),
+        ),
+      ],
+    );
+  }
+}
+

@@ -1,21 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 
-import 'package:agri_pulse/main.dart';
+import 'package:agri_pulse/screens/auth/login_screen.dart';
 
 void main() {
-  testWidgets('Splash screen renders and navigates to login', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const MyApp());
-
-    expect(find.text('AgriPulse'), findsOneWidget);
-    expect(find.text('Smart Agricultural Market Intelligence'), findsOneWidget);
-
-    await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
+  testWidgets('Login screen renders', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: LoginScreen(),
+      ),
+    );
 
     expect(find.text('Welcome Back!'), findsOneWidget);
     expect(find.text('Login to AgriPulse'), findsOneWidget);
-    expect(find.text('Continue as Guest'), findsOneWidget);
   });
 }

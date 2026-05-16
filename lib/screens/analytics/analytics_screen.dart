@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../data/dummy_data.dart';
 import '../../utils/colors.dart';
 import '../../utils/constants.dart';
+import '../../widgets/ai_advisory_card.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   static const String routeName = '/analytics';
@@ -49,6 +50,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ),
         children: [
           _buildFilterTabs(),
+          const SizedBox(height: 18),
+
           const SizedBox(height: 18),
           _buildPriceTrendSection(),
           const SizedBox(height: 18),

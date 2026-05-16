@@ -1,0 +1,63 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B4332"/>
+      <stop offset="100%" stop-color="#40916C"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="roundclip">
+      <rect width="1024" height="1024" rx="230" ry="230"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#roundclip)">
+    <rect width="1024" height="1024" fill="url(#bg)"/>
+    <rect width="1024" height="1024" fill="url(#shine)"/>
+
+    <circle cx="820" cy="200" r="260" fill="#52B788" fill-opacity="0.10"/>
+    <circle cx="180" cy="860" r="220" fill="#1B4332" fill-opacity="0.40"/>
+
+    <g stroke="#D8F3DC" stroke-linecap="round" fill="none">
+      <line x1="512" y1="820" x2="512" y2="390" stroke-width="36"/>
+      <line x1="512" y1="560" x2="390" y2="420" stroke-width="28"/>
+      <line x1="512" y1="560" x2="634" y2="420" stroke-width="28"/>
+      <line x1="512" y1="480" x2="410" y2="345" stroke-width="24"/>
+      <line x1="512" y1="480" x2="614" y2="345" stroke-width="24"/>
+      <line x1="512" y1="430" x2="440" y2="300" stroke-width="20"/>
+      <line x1="512" y1="430" x2="584" y2="300" stroke-width="20"/>
+
+      <line x1="310" y1="820" x2="310" y2="440" stroke-width="28"/>
+      <line x1="310" y1="610" x2="210" y2="480" stroke-width="22"/>
+      <line x1="310" y1="610" x2="410" y2="480" stroke-width="22"/>
+      <line x1="310" y1="530" x2="228" y2="400" stroke-width="18"/>
+      <line x1="310" y1="530" x2="392" y2="400" stroke-width="18"/>
+
+      <line x1="714" y1="820" x2="714" y2="440" stroke-width="28"/>
+      <line x1="714" y1="610" x2="614" y2="480" stroke-width="22"/>
+      <line x1="714" y1="610" x2="814" y2="480" stroke-width="22"/>
+      <line x1="714" y1="530" x2="632" y2="400" stroke-width="18"/>
+      <line x1="714" y1="530" x2="796" y2="400" stroke-width="18"/>
+    </g>
+
+    <ellipse cx="512" cy="285" rx="54" ry="72" fill="#74C69D"/>
+    <ellipse cx="392" cy="325" rx="44" ry="58" fill="#52B788"/>
+    <ellipse cx="632" cy="325" rx="44" ry="58" fill="#52B788"/>
+    <ellipse cx="440" cy="270" rx="36" ry="50" fill="#95D5B2"/>
+    <ellipse cx="584" cy="270" rx="36" ry="50" fill="#95D5B2"/>
+    <ellipse cx="310" cy="375" rx="38" ry="52" fill="#52B788"/>
+    <ellipse cx="228" cy="370" rx="30" ry="44" fill="#74C69D"/>
+    <ellipse cx="714" cy="375" rx="38" ry="52" fill="#52B788"/>
+    <ellipse cx="796" cy="370" rx="30" ry="44" fill="#74C69D"/>
+
+    <path d="M200 720 L340 680 L430 700 L512 650 L600 700 L690 660 L824 690"
+          fill="none" stroke="#74C69D" stroke-width="20"
+          stroke-linecap="round" stroke-linejoin="round"/>
+
+    <line x1="160" y1="820" x2="864" y2="820"
+          stroke="#D8F3DC" stroke-width="12" stroke-opacity="0.3"/>
+  </g>
+</svg>
+

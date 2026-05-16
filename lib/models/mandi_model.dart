@@ -6,6 +6,8 @@ class MandiModel {
   final String distance;
   final bool isOpen;
   final int totalCrops;
+  final double latitude;
+  final double longitude;
 
   const MandiModel({
     required this.id,
@@ -15,6 +17,8 @@ class MandiModel {
     required this.distance,
     required this.isOpen,
     required this.totalCrops,
+    this.latitude = 0.0,
+    this.longitude = 0.0,
   });
 
   factory MandiModel.fromMap(Map<String, dynamic> map) {
@@ -26,6 +30,8 @@ class MandiModel {
       distance: map['distance'] as String,
       isOpen: map['isOpen'] as bool,
       totalCrops: map['totalCrops'] as int,
+      latitude: (map['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (map['longitude'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

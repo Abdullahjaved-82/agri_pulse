@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-
-import 'services/notification_service.dart';
+import 'services/app_initializer.dart';
 import 'models/crop_model.dart';
 import 'models/mandi_model.dart';
 import 'screens/auth/forgot_password_screen.dart';
@@ -24,17 +24,18 @@ import 'screens/profile/profile_screen.dart';
 import 'screens/tools/market_overview_screen.dart';
 import 'screens/tools/tools_screen.dart';
 import 'screens/tools/weather_screen.dart';
+import 'screens/tools/firestore_seed_screen.dart';
 import 'utils/colors.dart';
 import 'utils/constants.dart';
+import 'utils/language_provider.dart';
 
 Future<void> main() async {
   final WidgetsBinding widgetsBinding =
       WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  await NotificationService.instance.initialize();
-
-  runApp(const MyApp());
+  AppInitializer.ensureInitialized();
+  runApp(const LanguageScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -60,10 +61,19 @@ class MyApp extends StatelessWidget {
   static const String notificationsRoute = '/notifications';
   static const String aboutRoute = '/about';
   static const String profileRoute = '/profile';
+  static const String seedFirestoreRoute = '/seed-firestore';
 
   @override
   Widget build(BuildContext context) {
+    final lang = LanguageScope.of(context);
     return MaterialApp(
+      locale: lang.locale,
+      supportedLocales: const [Locale('en'), Locale('ur')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       title: kAppName,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -124,6 +134,7 @@ class MyApp extends StatelessWidget {
         notificationsRoute: (context) => const NotificationsScreen(),
         aboutRoute: (context) => const AboutAppScreen(),
         profileRoute: (context) => const ProfileScreen(),
+        seedFirestoreRoute: (context) => const FirestoreSeedScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == cropDetailRoute) {
@@ -150,7 +161,7 @@ class MyApp extends StatelessWidget {
           final Object? args = settings.arguments;
           if (args is Map<String, dynamic>) {
             return MaterialPageRoute(
-              builder: (_) => NewsDetailScreen(news: args),
+              builder: (_) => const NewsDetailScreen(),
               settings: settings,
             );
           }

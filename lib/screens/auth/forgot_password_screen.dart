@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../services/auth_service.dart';
 import '../../utils/colors.dart';
 import '../../utils/constants.dart';
-import 'otp_verification_screen.dart';
+import 'login_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   static const String routeName = '/forgot-password';
@@ -15,6 +16,8 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -22,11 +25,54 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _continue() {
-    Navigator.of(context).pushNamed(
-      OtpVerificationScreen.routeName,
-      arguments: _emailController.text.trim(),
-    );
+  Future<void> _sendResetEmail() async {
+    final String email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter your email to continue.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final bool exists = await _authService.checkIfUserExists(email);
+      if (!exists) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Account does not exist.')),
+          );
+        }
+        return;
+      }
+
+      await _authService.sendPasswordReset(email: email);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password reset email sent.')),
+      );
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        LoginScreen.routeName,
+        (route) => false,
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_authService.readableError(error))),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -43,7 +89,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Enter your email and we will send a 6-digit OTP to reset your password.',
+              'Enter your email and we will send a reset link.',
               style: TextStyle(color: kTextLight, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 16),
@@ -59,13 +105,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _continue,
+                onPressed: _isLoading ? null : _sendResetEmail,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(46),
                 ),
-                child: const Text('Send OTP'),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Send Reset Email'),
               ),
             ),
           ],
@@ -74,4 +129,3 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 }
-

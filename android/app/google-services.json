@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "284740617538",
+    "project_id": "agri-pulse-50e41",
+    "storage_bucket": "agri-pulse-50e41.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:284740617538:android:1c0d9009d2aba06d98f4db",
+        "android_client_info": {
+          "package_name": "com.example.agri_pulse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDONTojD_Tsv8PVXzSQ-R6y8nKzrR4IAlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

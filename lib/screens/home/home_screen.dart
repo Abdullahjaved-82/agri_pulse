@@ -578,7 +578,7 @@ class _HomeTabState extends State<_HomeTab> {
 // ── Hero Header Delegate ──────────────────────────────────────────────────────
 class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
   static const double _maxH = 180;
-  static const double _minH = 70;
+  static const double _minH = 88;
   
   final bool isUrdu;
   _HeroHeaderDelegate({required this.isUrdu});
@@ -636,10 +636,16 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
         ),
 
         // content
-        SafeArea(
-          bottom: false,
+        Positioned(
+          top: MediaQuery.paddingOf(context).top,
+          left: 0,
+          right: 0,
+          bottom: 0,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            padding: EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: _lerp(12, 4, t),
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -711,32 +717,34 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
 
                 // actions
                 IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                   onPressed: () => Navigator.of(context).pushNamed(MyApp.notificationsRoute),
                   icon: const Icon(Icons.notifications_none_rounded,
                       color: Colors.white, size: 24),
                   tooltip: 'Notifications',
                 ),
-                const SizedBox(width: 2),
+                const SizedBox(width: 6),
                 GestureDetector(
                   onTap: () => Navigator.of(context).pushNamed(ProfileScreen.routeName),
                   child: Container(
-                    width: 36, height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.15),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.35),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: const Icon(Icons.person_rounded,
-                        color: Colors.white, size: 20),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+                     width: 36, height: 36,
+                     decoration: BoxDecoration(
+                       shape: BoxShape.circle,
+                       color: Colors.white.withValues(alpha: 0.15),
+                       border: Border.all(
+                         color: Colors.white.withValues(alpha: 0.35),
+                         width: 1.5,
+                       ),
+                     ),
+                     child: const Icon(Icons.person_rounded,
+                         color: Colors.white, size: 20),
+                   ),
+                 ),
+               ],
+             ),
+           ),
+         ),
       ],
     );
   }

@@ -94,6 +94,43 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
           final double dayLow = values.isNotEmpty ? values.reduce(math.min) : crop.price;
           final double avg7Day = values.isNotEmpty ? values.reduce((a, b) => a + b) / values.length : crop.price;
 
+          // Calculate clean, well-spaced dynamic Y-axis intervals to prevent overlapping labels
+          final double priceDelta = dayHigh - dayLow;
+          double yInterval;
+          if (priceDelta == 0) {
+            yInterval = (dayHigh * 0.1).ceilToDouble();
+            if (yInterval < 5) yInterval = 5;
+          } else {
+            final double baseInterval = priceDelta / 5;
+            if (baseInterval < 5) {
+              yInterval = 5;
+            } else if (baseInterval < 10) {
+              yInterval = 10;
+            } else if (baseInterval < 25) {
+              yInterval = 25;
+            } else if (baseInterval < 50) {
+              yInterval = 50;
+            } else if (baseInterval < 100) {
+              yInterval = 100;
+            } else if (baseInterval < 250) {
+              yInterval = 250;
+            } else if (baseInterval < 500) {
+              yInterval = 500;
+            } else {
+              yInterval = (baseInterval / 100).ceil() * 100.0;
+            }
+          }
+
+          double minY = (dayLow / yInterval).floor() * yInterval;
+          double maxY = (dayHigh / yInterval).ceil() * yInterval;
+
+          // Ensure at least two intervals are visible
+          if (maxY - minY < yInterval * 2) {
+            minY -= yInterval;
+            maxY += yInterval;
+          }
+          if (minY < 0) minY = 0;
+
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
               kDefaultPadding,
@@ -361,12 +398,12 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                         height: 220,
                         child: LineChart(
                           LineChartData(
-                            minY: dayLow - 30,
-                            maxY: dayHigh + 30,
+                            minY: minY,
+                            maxY: maxY,
                             gridData: FlGridData(
                               show: true,
                               drawVerticalLine: true,
-                              horizontalInterval: 20,
+                              horizontalInterval: yInterval,
                               verticalInterval: 1,
                               getDrawingHorizontalLine: (value) => FlLine(
                                 color: kTextLight.withValues(alpha: 0.2),
@@ -395,8 +432,8 @@ class _CropDetailScreenState extends State<CropDetailScreen> {
                               leftTitles: AxisTitles(
                                 sideTitles: SideTitles(
                                   showTitles: true,
-                                  reservedSize: 44,
-                                  interval: 20,
+                                  reservedSize: 50,
+                                  interval: yInterval,
                                   getTitlesWidget: (value, meta) {
                                     return Padding(
                                       padding: const EdgeInsets.only(right: 6),

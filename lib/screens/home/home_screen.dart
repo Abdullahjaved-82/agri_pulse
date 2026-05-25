@@ -29,6 +29,7 @@ import '../../utils/language_provider.dart';
 import '../../models/crop_model.dart';
 import '../../services/price_alert_service.dart';
 import '../../screens/alerts/price_alert_screen.dart';
+import '../../services/weather_service.dart';
 
 // ── Palette extras ────────────────────────────────────────────────────────────
 const Color _deep   = Color(0xFF1B4332);
@@ -198,10 +199,15 @@ class _HomeTab extends StatefulWidget {
 class _HomeTabState extends State<_HomeTab> {
   final GroqNewsService _newsSvc = GroqNewsService();
   final LocationService _locSvc = LocationService();
+  final WeatherService _weatherSvc = WeatherService();
+  
   List<GroqNewsArticle> _homeNews = [];
   bool _newsLoading = true;
   Position? _currentPosition;
   int _activeAlertsCount = 0;
+  
+  String _weatherTemp = '28°C';
+  String _weatherCity = 'Lahore';
 
   @override
   void initState() {
@@ -240,12 +246,34 @@ class _HomeTabState extends State<_HomeTab> {
     }
   }
 
+  Future<void> _loadHomeWeather() async {
+    if (_currentPosition == null) return;
+    try {
+      final report = await _weatherSvc.fetchForecastByCoords(
+        latitude: _currentPosition!.latitude,
+        longitude: _currentPosition!.longitude,
+        days: 1,
+      );
+      if (mounted) {
+        setState(() {
+          _weatherTemp = '${report.currentTempC.toStringAsFixed(0)}°C';
+          _weatherCity = report.locationName;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Home weather load failed: $e');
+      }
+    }
+  }
+
   Future<void> _initLocation() async {
     try {
       final pos = await _locSvc.getCurrentLocation();
       if (!mounted) return;
       if (pos != null) {
         setState(() => _currentPosition = pos);
+        await _loadHomeWeather();
       } else {
         await _showLocationDialog();
       }
@@ -357,6 +385,8 @@ class _HomeTabState extends State<_HomeTab> {
               isUrdu: isUrdu,
               activeAlertsCount: _activeAlertsCount,
               onRefreshAlerts: _loadAlerts,
+              temperature: _weatherTemp,
+              cityName: _weatherCity,
             ),
 
             const SizedBox(height: 20),
@@ -719,11 +749,15 @@ class _StatRow extends StatelessWidget {
   final bool isUrdu;
   final int activeAlertsCount;
   final VoidCallback onRefreshAlerts;
+  final String temperature;
+  final String cityName;
 
   const _StatRow({
     required this.isUrdu,
     required this.activeAlertsCount,
     required this.onRefreshAlerts,
+    required this.temperature,
+    required this.cityName,
   });
   
   @override
@@ -776,8 +810,8 @@ class _StatRow extends StatelessWidget {
           const SizedBox(width: 12),
           _StatCard(
             icon: Icons.cloud_done_rounded,
-            value: '28°C',
-            label: isUrdu ? "لاہور\nموسم" : "Lahore\nWeather",
+            value: temperature,
+            label: isUrdu ? "$cityName\nموسم" : "$cityName\nWeather",
             iconColor: const Color(0xFF1565C0),
             bgColor: const Color(0xFFE3F2FD),
             onTap: () => Navigator.of(context).pushNamed(MyApp.weatherRoute),

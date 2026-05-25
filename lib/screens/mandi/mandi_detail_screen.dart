@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/dummy_data.dart';
 import '../../models/crop_model.dart';
@@ -163,72 +164,127 @@ class _MapPlaceholder extends StatelessWidget {
 
   const _MapPlaceholder({required this.mandi});
 
+  Future<void> _openMap(BuildContext context) async {
+    final String url = mandi.latitude != 0.0 && mandi.longitude != 0.0
+        ? 'https://www.google.com/maps/search/?api=1&query=${mandi.latitude},${mandi.longitude}'
+        : 'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent('${mandi.name}, ${mandi.city}')}';
+    final Uri uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open map: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 180,
-      decoration: BoxDecoration(
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(kDefaultBorderRadius),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            kAccentColor.withValues(alpha: 0.45),
-            kSecondaryColor.withValues(alpha: 0.22),
-          ],
-        ),
       ),
-      child: Stack(
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.map,
-              size: 64,
-              color: kPrimaryColor.withValues(alpha: 0.8),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _openMap(context),
+        child: Container(
+          height: 180,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                kAccentColor.withValues(alpha: 0.45),
+                kSecondaryColor.withValues(alpha: 0.22),
+              ],
             ),
           ),
-          Align(
-            alignment: Alignment.center,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 70),
-              child: Text(
-                'Map View',
-                style: TextStyle(
-                  color: kPrimaryColor.withValues(alpha: 0.9),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.15,
+                  child: GridPaper(
+                    color: kPrimaryColor,
+                    divisions: 2,
+                    subdivisions: 1,
+                    interval: 60,
+                  ),
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            top: 12,
-            right: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.85),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.place, size: 14, color: kPrimaryColor),
-                  const SizedBox(width: 4),
-                  Text(
-                    mandi.city,
-                    style: const TextStyle(
+              Align(
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.map_rounded,
+                      size: 56,
                       color: kPrimaryColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tap to View Live Map',
+                      style: TextStyle(
+                        color: kPrimaryColor.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Opens in Google Maps',
+                      style: TextStyle(
+                        color: kTextLight,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.place, size: 14, color: kPrimaryColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        mandi.city,
+                        style: const TextStyle(
+                          color: kPrimaryColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

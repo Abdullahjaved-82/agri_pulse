@@ -186,8 +186,15 @@ class _MapPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasCoords = mandi.latitude != 0.0 && mandi.longitude != 0.0;
+    
+    // Dynamic premium static map tile from open global map provider
+    final String mapImageUrl = hasCoords
+        ? 'https://static-maps.yandex.ru/1.x/?ll=${mandi.longitude},${mandi.latitude}&z=14&size=650,180&l=map&pt=${mandi.longitude},${mandi.latitude},pm2lsm'
+        : 'https://static-maps.yandex.ru/1.x/?ll=74.3095,31.5925&z=11&size=650,180&l=map';
+
     return Card(
-      elevation: 2,
+      elevation: 3,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(kDefaultBorderRadius),
       ),
@@ -197,54 +204,126 @@ class _MapPlaceholder extends StatelessWidget {
         child: Container(
           height: 180,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                kAccentColor.withValues(alpha: 0.45),
-                kSecondaryColor.withValues(alpha: 0.22),
-              ],
-            ),
+            color: Colors.grey.shade200,
           ),
           child: Stack(
             children: [
+              // 1. Dynamic Map Image
               Positioned.fill(
-                child: Opacity(
-                  opacity: 0.15,
-                  child: GridPaper(
-                    color: kPrimaryColor,
-                    divisions: 2,
-                    subdivisions: 1,
-                    interval: 60,
+                child: Image.network(
+                  mapImageUrl,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: kPrimaryColor,
+                        value: progress.expectedTotalBytes != null
+                            ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                            : null,
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            kAccentColor.withValues(alpha: 0.45),
+                            kSecondaryColor.withValues(alpha: 0.22),
+                          ],
+                        ),
+                      ),
+                      child: Opacity(
+                        opacity: 0.15,
+                        child: GridPaper(
+                          color: kPrimaryColor,
+                          divisions: 2,
+                          subdivisions: 1,
+                          interval: 60,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // 2. Glassmorphic Gradient overlay
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.15),
+                        Colors.white.withValues(alpha: 0.88),
+                      ],
+                    ),
                   ),
                 ),
               ),
+              // 3. Central HUD & Text
               Align(
                 alignment: Alignment.center,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.map_rounded,
-                      size: 56,
-                      color: kPrimaryColor,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: kPrimaryColor.withValues(alpha: 0.9),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.directions_rounded,
+                        size: 28,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'Tap to View Live Map',
-                      style: TextStyle(
-                        color: kPrimaryColor.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        'Tap to Open Directions',
+                        style: TextStyle(
+                          color: kPrimaryColor,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 2),
-                    const Text(
-                      'Opens in Google Maps',
-                      style: TextStyle(
-                        color: kTextLight,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        'Opens in Google Maps',
+                        style: TextStyle(
+                          color: kTextDark,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],

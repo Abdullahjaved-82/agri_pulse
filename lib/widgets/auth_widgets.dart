@@ -1,3 +1,4 @@
+import '../utils/app_fonts.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -92,7 +93,7 @@ class _WaveHeader extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   title,
-                  style: GoogleFonts.playfairDisplay(
+                  style: AppFonts.playfairDisplay(context, 
                     color: Colors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -101,7 +102,7 @@ class _WaveHeader extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   'AGRIPULSE',
-                  style: GoogleFonts.dmSans(
+                  style: AppFonts.dmSans(context, 
                     color: Colors.white.withValues(alpha: 0.48),
                     fontSize: 9,
                     letterSpacing: 3.5,
@@ -192,10 +193,10 @@ class _AgriField extends StatelessWidget {
       obscureText: obscure,
       maxLength: maxLength,
       onChanged: onChanged,
-      style: GoogleFonts.dmSans(fontSize: 14, color: Colors.black87),
+      style: AppFonts.dmSans(context, fontSize: 14, color: Colors.black87),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.dmSans(color: Colors.grey.shade400, fontSize: 14),
+        hintStyle: AppFonts.dmSans(context, color: Colors.grey.shade400, fontSize: 14),
         counterText: '',
         errorText: errorText,
         filled: true,
@@ -249,10 +250,10 @@ class _AgriDropdown extends StatelessWidget {
     return DropdownButtonFormField<String>(
       value: value,
       onChanged: onChanged,
-      style: GoogleFonts.dmSans(fontSize: 14, color: Colors.black87),
+      style: AppFonts.dmSans(context, fontSize: 14, color: Colors.black87),
       decoration: InputDecoration(
         hintText: 'I am a...',
-        hintStyle: GoogleFonts.dmSans(color: Colors.grey.shade400),
+        hintStyle: AppFonts.dmSans(context, color: Colors.grey.shade400),
         filled: true,
         fillColor: _fieldBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
@@ -314,7 +315,7 @@ class _PrimaryButton extends StatelessWidget {
         )
             : Text(
           label,
-          style: GoogleFonts.dmSans(
+          style: AppFonts.dmSans(context, 
             fontSize: 15,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.3,
@@ -344,14 +345,14 @@ class _FooterRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(question,
-            style: GoogleFonts.dmSans(
+            style: AppFonts.dmSans(context, 
                 fontSize: 13, color: Colors.grey.shade500)),
         const SizedBox(width: 4),
         GestureDetector(
           onTap: onTap,
           child: Text(
             action,
-            style: GoogleFonts.dmSans(
+            style: AppFonts.dmSans(context, 
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: _bright,

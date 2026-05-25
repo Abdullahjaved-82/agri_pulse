@@ -70,5 +70,9 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>We use your location to show nearby mandis and local prices.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>We use your location to show nearby mandis and local prices.</string>
 	</dict>
 </plist>

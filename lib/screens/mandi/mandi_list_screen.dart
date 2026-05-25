@@ -28,6 +28,17 @@ class _MandiListScreenState extends State<MandiListScreen> {
 
   String _searchQuery = '';
   String _activeStatusFilter = 'All';
+  String _activeProvinceFilter = 'All';
+
+  final List<String> _provinces = [
+    'All',
+    'Punjab',
+    'Sindh',
+    'KPK',
+    'Balochistan',
+    'GB',
+    'AJK',
+  ];
 
   @override
   void initState() {
@@ -52,6 +63,10 @@ class _MandiListScreenState extends State<MandiListScreen> {
           (_activeStatusFilter == 'Closed' && !mandi.isOpen);
 
       if (!matchesStatus) {
+        return false;
+      }
+      
+      if (_activeProvinceFilter != 'All' && mandi.province != _activeProvinceFilter) {
         return false;
       }
 
@@ -155,45 +170,83 @@ class _MandiListScreenState extends State<MandiListScreen> {
                   ),
                 ),
               ),
-              SizedBox(
-                height: 42,
-                child: ListView.separated(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: kDefaultPadding),
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, index) {
-                    final String filter = _statusFilters[index];
-                    final bool isSelected = _activeStatusFilter == filter;
-                    String displayFilter = filter;
-                    if (isUrdu) {
-                      if (filter == 'All') displayFilter = 'سب';
-                      if (filter == 'Open') displayFilter = 'کھلی';
-                      if (filter == 'Closed') displayFilter = 'بند';
-                    }
-
-                    return ChoiceChip(
-                      label: Text(displayFilter),
-                      selected: isSelected,
-                      onSelected: (_) {
-                        setState(() {
-                          _activeStatusFilter = filter;
-                        });
-                      },
-                      selectedColor: kSecondaryColor,
-                      backgroundColor: Colors.white,
-                      side: BorderSide(
-                        color: isSelected
-                            ? kSecondaryColor
-                            : kTextLight.withValues(alpha: 0.25),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: kDefaultPadding),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _activeProvinceFilter,
+                            isExpanded: true,
+                            icon: const Icon(Icons.arrow_drop_down, color: kPrimaryColor),
+                            items: _provinces.map((prov) {
+                              return DropdownMenuItem(
+                                value: prov,
+                                child: Text(prov == 'All' ? (isUrdu ? 'تمام صوبے' : 'All Provinces') : prov),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() => _activeProvinceFilter = val);
+                              }
+                            },
+                          ),
+                        ),
                       ),
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : kTextDark,
-                        fontWeight: FontWeight.w600,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 4,
+                      child: SizedBox(
+                        height: 48,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemBuilder: (context, index) {
+                            final String filter = _statusFilters[index];
+                            final bool isSelected = _activeStatusFilter == filter;
+                            String displayFilter = filter;
+                            if (isUrdu) {
+                              if (filter == 'All') displayFilter = 'سب';
+                              if (filter == 'Open') displayFilter = 'کھلی';
+                              if (filter == 'Closed') displayFilter = 'بند';
+                            }
+        
+                            return ChoiceChip(
+                              label: Text(displayFilter),
+                              selected: isSelected,
+                              onSelected: (_) {
+                                setState(() {
+                                  _activeStatusFilter = filter;
+                                });
+                              },
+                              selectedColor: kSecondaryColor,
+                              backgroundColor: Colors.white,
+                              side: BorderSide(
+                                color: isSelected
+                                    ? kSecondaryColor
+                                    : kTextLight.withValues(alpha: 0.25),
+                              ),
+                              labelStyle: TextStyle(
+                                color: isSelected ? Colors.white : kTextDark,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
+                          separatorBuilder: (context, index) => const SizedBox(width: 8),
+                          itemCount: _statusFilters.length,
+                        ),
                       ),
-                    );
-                  },
-                  separatorBuilder: (context, index) => const SizedBox(width: 8),
-                  itemCount: _statusFilters.length,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),
@@ -215,6 +268,9 @@ class _MandiListScreenState extends State<MandiListScreen> {
                         itemCount: mandis.length,
                         itemBuilder: (context, index) {
                           final MandiModel mandi = mandis[index];
+                          final bool isNearest = _currentPosition != null && 
+                                                 allMandis.isNotEmpty && 
+                                                 mandi.id == allMandis.first.id;
                           return MandiCard(
                             name: mandi.name,
                             city: mandi.city,
@@ -222,6 +278,7 @@ class _MandiListScreenState extends State<MandiListScreen> {
                             distance: mandi.distance,
                             isOpen: mandi.isOpen,
                             totalCrops: mandi.totalCrops,
+                            isNearest: isNearest,
                             onTap: () {
                               Navigator.of(context).pushNamed(
                                 MandiDetailScreen.routeName,

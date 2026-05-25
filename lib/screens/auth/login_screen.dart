@@ -1,3 +1,4 @@
+import '../../utils/app_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:agri_pulse/screens/home/home_screen.dart';
@@ -5,6 +6,7 @@ import 'package:agri_pulse/utils/colors.dart';
 import 'package:agri_pulse/utils/constants.dart';
 import '../../main.dart';
 import '../../services/auth_service.dart';
+import '../../services/preferences_service.dart';
 import '../../utils/language_provider.dart';
 import 'signup_screen.dart';
 
@@ -24,10 +26,31 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _rememberMe = false;
 
   final TextEditingController _emailController    = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
+  final PreferencesService _prefsService = PreferencesService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final creds = await _prefsService.getCredentials();
+    if (creds['email'] != null && creds['password'] != null) {
+      if (mounted) {
+        setState(() {
+          _emailController.text = creds['email']!;
+          _passwordController.text = creds['password']!;
+          _rememberMe = true;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -48,6 +71,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await _authService.signIn(email: email, password: password);
+      
+      if (_rememberMe) {
+        await _prefsService.saveCredentials(email, password);
+      } else {
+        await _prefsService.clearCredentials();
+      }
+
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, HomeScreen.routeName);
     } catch (error) {
@@ -83,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Text(
                       isUrdu ? 'ایگری پلس میں لاگ ان کریں' : 'Login to AgriPulse',
-                      style: GoogleFonts.dmSans(
+                      style: AppFonts.dmSans(context, 
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
                         color: _deep,
@@ -107,24 +137,47 @@ class _LoginScreenState extends State<LoginScreen> {
                           setState(() => _obscurePassword = !_obscurePassword),
                     ),
 
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () => Navigator.pushNamed(
-                            context, MyApp.forgotPasswordRoute),
-                        style: TextButton.styleFrom(
-                          foregroundColor: _bright,
-                          padding: const EdgeInsets.only(top: 2, bottom: 6),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: _rememberMe,
+                              onChanged: (val) {
+                                setState(() {
+                                  _rememberMe = val ?? false;
+                                });
+                              },
+                              activeColor: kPrimaryColor,
+                            ),
+                            Text(
+                              isUrdu ? 'مجھے یاد رکھیں' : 'Remember Me',
+                              style: AppFonts.dmSans(context, 
+                                fontSize: 13,
+                                color: _deep,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Text(
-                          isUrdu ? 'پاس ورڈ بھول گئے؟' : 'Forgot Password?',
-                          style: GoogleFonts.dmSans(fontSize: 13),
+                        TextButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () => Navigator.pushNamed(
+                              context, MyApp.forgotPasswordRoute),
+                          style: TextButton.styleFrom(
+                            foregroundColor: _bright,
+                            padding: const EdgeInsets.only(top: 2, bottom: 6),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            isUrdu ? 'پاس ورڈ بھول گئے؟' : 'Forgot Password?',
+                            style: AppFonts.dmSans(context, fontSize: 13),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
 
                     const SizedBox(height: 6),
@@ -193,7 +246,7 @@ class _WaveHeader extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 title,
-                style: GoogleFonts.dmSans(
+                style: AppFonts.dmSans(context, 
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -319,11 +372,11 @@ class _FooterRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(question, style: GoogleFonts.dmSans(fontSize: 13)),
+        Text(question, style: AppFonts.dmSans(context, fontSize: 13)),
         TextButton(
           onPressed: onTap,
           style: TextButton.styleFrom(foregroundColor: _bright),
-          child: Text(action, style: GoogleFonts.dmSans(fontSize: 13)),
+          child: Text(action, style: AppFonts.dmSans(context, fontSize: 13)),
         ),
       ],
     );

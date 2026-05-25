@@ -1,3 +1,4 @@
+import '../../utils/app_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -59,7 +60,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             foregroundColor: Colors.white,
             title: Text(
               isUrdu ? 'اطلاعات' : 'Notifications',
-              style: GoogleFonts.dmSans(fontWeight: FontWeight.w700),
+              style: AppFonts.dmSans(context, fontWeight: FontWeight.w700),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: _NotifHero(isUrdu: isUrdu),
@@ -103,6 +104,64 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       : 'When price falls below your threshold',
                   value: _priceDrops,
                   onChanged: (v) => setState(() => _priceDrops = v),
+                ),
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pushNamed('/price-alerts'),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.add_alert_rounded, color: Color(0xFFE65100), size: 22),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isUrdu ? 'حسب ضرورت قیمت کے اہداف' : 'Configure Custom Targets',
+                                style: const TextStyle(
+                                  color: kTextDark,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isUrdu ? 'فصلوں کی قیمتوں پر الرٹس لگائیں' : 'Manage your custom price thresholds',
+                                style: const TextStyle(color: kTextLight, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: kTextLight.withValues(alpha: 0.6),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: 20),
@@ -188,7 +247,7 @@ class _NotifHero extends StatelessWidget {
                   const SizedBox(width: 14),
                   Text(
                     isUrdu ? 'اطلاعات کا انتظام کریں' : 'Manage your alerts & updates',
-                    style: GoogleFonts.dmSans(
+                    style: AppFonts.dmSans(context, 
                       color: Colors.white70, fontSize: 13),
                   ),
                 ],
@@ -236,12 +295,12 @@ class _ActiveChip extends StatelessWidget {
               children: [
                 Text(
                   isUrdu ? '$count اطلاعات فعال ہیں' : '$count Notifications Active',
-                  style: GoogleFonts.dmSans(
+                  style: AppFonts.dmSans(context, 
                     fontWeight: FontWeight.w800, fontSize: 15, color: kTextDark),
                 ),
                 Text(
                   isUrdu ? 'آپ کی ترجیحات محفوظ ہیں' : 'Your preferences are saved',
-                  style: GoogleFonts.dmSans(color: kTextLight, fontSize: 12),
+                  style: AppFonts.dmSans(context, color: kTextLight, fontSize: 12),
                 ),
               ],
             ),
@@ -254,7 +313,7 @@ class _ActiveChip extends StatelessWidget {
             ),
             child: Center(
               child: Text('$count',
-                style: GoogleFonts.dmSans(
+                style: AppFonts.dmSans(context, 
                   color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
             ),
           ),
@@ -313,12 +372,12 @@ class _NotifTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                  style: GoogleFonts.dmSans(
+                  style: AppFonts.dmSans(context, 
                     color: value ? kTextDark : kTextLight,
                     fontWeight: FontWeight.w700, fontSize: 14)),
                 const SizedBox(height: 2),
                 Text(subtitle,
-                  style: GoogleFonts.dmSans(color: kTextLight, fontSize: 12)),
+                  style: AppFonts.dmSans(context, color: kTextLight, fontSize: 12)),
               ],
             ),
           ),
@@ -366,7 +425,7 @@ class _TestNotifButton extends StatelessWidget {
             const SizedBox(width: 10),
             Text(
               isUrdu ? 'ٹیسٹ اطلاع بھیجیں' : 'Send Test Notification',
-              style: GoogleFonts.dmSans(
+              style: AppFonts.dmSans(context, 
                 color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
             ),
           ],
@@ -387,7 +446,7 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4, bottom: 4),
       child: Text(
         title.toUpperCase(),
-        style: GoogleFonts.dmSans(
+        style: AppFonts.dmSans(context, 
           fontSize: 11, fontWeight: FontWeight.w700,
           color: kTextLight, letterSpacing: 1.2),
       ),

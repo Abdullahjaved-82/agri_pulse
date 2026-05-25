@@ -1,10 +1,35 @@
 import asyncio
 import datetime
-from playwright.async_api import async_playwright
 import logging
+import os
+from playwright.async_api import async_playwright
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+try:
+    import firebase_admin
+    from firebase_admin import credentials, firestore
+except ImportError:
+    firebase_admin = None
+
+# Initialize Firebase if credentials exist
+_db = None
+_CRED_PATH = os.getenv("FIREBASE_SERVICE_ACCOUNT", "serviceAccountKey.json")
+
+if firebase_admin:
+    if os.path.exists(_CRED_PATH):
+        try:
+            cred = credentials.Certificate(_CRED_PATH)
+            firebase_admin.initialize_app(cred)
+            _db = firestore.client()
+            logger.info("Firebase initialized successfully.")
+        except Exception as e:
+            logger.error(f"Error initializing Firebase: {e}")
+    else:
+        logger.warning(f"Firebase credentials not found at '{_CRED_PATH}'. Data will not be saved to Firestore.")
+else:
+    logger.warning("firebase-admin package is not installed. Data will not be saved to Firestore.")
 
 async def scrape_local_markets():
     """
@@ -12,7 +37,7 @@ async def scrape_local_markets():
     Returns a list of dictionaries with market prices for comparison.
     """
     today = datetime.datetime.now()
-    date_str = today.strftime("%d-%m-%Y")
+    date_str = today.strftime("%Y-%m-%d")
     logger.info(f"Starting Local Market scrape for date: {date_str}")
     
     results = []
@@ -49,6 +74,9 @@ async def scrape_local_markets():
         logger.error(f"Critical market scraper error: {e}")
         results = _fallback_scrape_data(commodities)
 
+    if _db:
+        _save_to_firebase(results, date_str)
+
     return results
 
 def _fallback_scrape_data(commodities):
@@ -81,6 +109,33 @@ def _fallback_scrape_data(commodities):
         })
         
     return results
+
+def _save_to_firebase(results, date_str):
+    logger.info("Saving market results to Firestore...")
+    try:
+        batch = _db.batch()
+        for item in results:
+            crop_name = item["name"]
+            doc_ref = _db.collection("market_prices").document(crop_name)
+            batch.set(doc_ref, {
+                "name": crop_name,
+                "price": item["market_price"],
+                "unit": item["unit"],
+                "source": item["source"],
+                "updatedAt": firestore.SERVER_TIMESTAMP
+            }, merge=True)
+
+            history_ref = doc_ref.collection("history").document(date_str)
+            batch.set(history_ref, {
+                "date": date_str,
+                "price": item["market_price"],
+                "source": item["source"]
+            })
+
+        batch.commit()
+        logger.info("Successfully updated market prices in Firestore.")
+    except Exception as e:
+        logger.error(f"Failed to save market prices: {e}")
 
 if __name__ == "__main__":
     prices = asyncio.run(scrape_local_markets())

@@ -1,3 +1,4 @@
+import '../../utils/app_fonts.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -9,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../screens/home/home_screen.dart';
 import 'login_screen.dart';
 import '../../services/app_initializer.dart';
+import '../../services/data_sync_service.dart';
 
 // ─── Color palette (tweak to match your kPrimaryColor / kSecondaryColor) ────
 const Color _deep = Color(0xFF1B4332);
@@ -95,11 +97,23 @@ class _SplashScreenState extends State<SplashScreen>
       _textCtrl.forward();
     });
 
-    _navTimer = Timer(const Duration(milliseconds: 3000), _navigate);
+    _navigate();
   }
 
   Future<void> _navigate() async {
     await _initFuture;
+    
+    // Check if data needs sync
+    final bool isStale = await DataSyncService.isDataStale();
+    if (isStale) {
+      // Simulate data fetch from Firebase (using dummy data, so just a delay)
+      await Future.delayed(const Duration(milliseconds: 1500));
+      await DataSyncService.markSynced();
+    } else {
+      // Small delay for smooth animation if no sync needed
+      await Future.delayed(const Duration(milliseconds: 2000));
+    }
+    
     if (!mounted) return;
     final bool loggedIn = FirebaseAuth.instance.currentUser != null;
     Navigator.pushReplacement<void, void>(
@@ -261,7 +275,7 @@ class _SplashScreenState extends State<SplashScreen>
                               children: [
                                 TextSpan(
                                   text: 'Agri',
-                                  style: GoogleFonts.playfairDisplay(
+                                  style: AppFonts.playfairDisplay(context, 
                                     color: Colors.white,
                                     fontSize: 40,
                                     fontWeight: FontWeight.w700,
@@ -270,7 +284,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 ),
                                 TextSpan(
                                   text: 'Pulse',
-                                  style: GoogleFonts.playfairDisplay(
+                                  style: AppFonts.playfairDisplay(context, 
                                     color: _accent,
                                     fontSize: 40,
                                     fontWeight: FontWeight.w700,
@@ -283,7 +297,7 @@ class _SplashScreenState extends State<SplashScreen>
                           const SizedBox(height: 8),
                           Text(
                             'MARKET INTELLIGENCE',
-                            style: GoogleFonts.dmSans(
+                            style: AppFonts.dmSans(context, 
                               color: Colors.white.withValues(alpha: 0.45),
                               fontSize: 11,
                               fontWeight: FontWeight.w400,

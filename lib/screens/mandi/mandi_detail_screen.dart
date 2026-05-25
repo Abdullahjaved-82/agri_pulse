@@ -324,18 +324,6 @@ class _ContactCard extends StatelessWidget {
 
   const _ContactCard({required this.mandi});
 
-  String _phoneForMandi(int id) {
-    const List<String> phones = [
-      '+92 42 111 222 101',
-      '+92 41 111 222 202',
-      '+92 61 111 222 303',
-      '+92 21 111 222 404',
-      '+92 91 111 222 505',
-      '+92 51 111 222 606',
-    ];
-    return phones[(id - 1) % phones.length];
-  }
-
   String _addressForMandi() {
     return '${mandi.name}, ${mandi.city}, ${mandi.province}, Pakistan';
   }
@@ -357,12 +345,6 @@ class _ContactCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _ContactTile(
-            icon: Icons.phone_outlined,
-            title: 'Phone Number',
-            value: _phoneForMandi(mandi.id),
-          ),
-          const SizedBox(height: 12),
           _ContactTile(
             icon: Icons.location_on_outlined,
             title: 'Address',

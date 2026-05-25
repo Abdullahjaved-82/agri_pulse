@@ -35,5 +35,32 @@ class WeatherService {
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return WeatherReport.fromMap(data);
   }
-}
 
+  /// Fetch weather by GPS coordinates instead of city name.
+  Future<WeatherReport> fetchForecastByCoords({
+    required double latitude,
+    required double longitude,
+    int days = 3,
+  }) async {
+    final apiKey = dotenv.env['WEATHER_API_KEY'];
+    if (apiKey == null || apiKey.isEmpty) {
+      throw Exception('WEATHER_API_KEY is missing');
+    }
+
+    final uri = Uri.https('api.weatherapi.com', '/v1/forecast.json', {
+      'key': apiKey,
+      'q': '$latitude,$longitude',
+      'days': days.toString(),
+      'aqi': 'no',
+      'alerts': 'no',
+    });
+
+    final response = await _client.get(uri);
+    if (response.statusCode != 200) {
+      throw Exception('Weather API error: ${response.statusCode}');
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return WeatherReport.fromMap(data);
+  }
+}

@@ -2,6 +2,8 @@ class WeatherForecastDay {
   final String date;
   final double maxTempC;
   final double minTempC;
+  final double avgHumidity;
+  final double maxWindKph;
   final String conditionText;
   final String conditionIconUrl;
 
@@ -9,6 +11,8 @@ class WeatherForecastDay {
     required this.date,
     required this.maxTempC,
     required this.minTempC,
+    required this.avgHumidity,
+    required this.maxWindKph,
     required this.conditionText,
     required this.conditionIconUrl,
   });
@@ -20,6 +24,8 @@ class WeatherForecastDay {
       date: map['date']?.toString() ?? '',
       maxTempC: (day['maxtemp_c'] as num?)?.toDouble() ?? 0,
       minTempC: (day['mintemp_c'] as num?)?.toDouble() ?? 0,
+      avgHumidity: (day['avghumidity'] as num?)?.toDouble() ?? 0,
+      maxWindKph: (day['maxwind_kph'] as num?)?.toDouble() ?? 0,
       conditionText: condition['text']?.toString() ?? 'Unknown',
       conditionIconUrl: _normalizeIconUrl(condition['icon']?.toString() ?? ''),
     );
@@ -31,6 +37,8 @@ class WeatherReport {
   final String region;
   final String country;
   final double currentTempC;
+  final double currentHumidity;
+  final double currentWindKph;
   final String currentConditionText;
   final String currentConditionIconUrl;
   final List<WeatherForecastDay> forecast;
@@ -40,6 +48,8 @@ class WeatherReport {
     required this.region,
     required this.country,
     required this.currentTempC,
+    required this.currentHumidity,
+    required this.currentWindKph,
     required this.currentConditionText,
     required this.currentConditionIconUrl,
     required this.forecast,
@@ -58,6 +68,8 @@ class WeatherReport {
       region: location['region']?.toString() ?? '',
       country: location['country']?.toString() ?? '',
       currentTempC: (current['temp_c'] as num?)?.toDouble() ?? 0,
+      currentHumidity: (current['humidity'] as num?)?.toDouble() ?? 0,
+      currentWindKph: (current['wind_kph'] as num?)?.toDouble() ?? 0,
       currentConditionText: currentCondition['text']?.toString() ?? 'Unknown',
       currentConditionIconUrl:
           _normalizeIconUrl(currentCondition['icon']?.toString() ?? ''),
@@ -80,4 +92,3 @@ String _normalizeIconUrl(String iconPath) {
   }
   return 'https://$iconPath';
 }
-

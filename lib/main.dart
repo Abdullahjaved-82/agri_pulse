@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'services/app_initializer.dart';
 import 'models/crop_model.dart';
 import 'models/mandi_model.dart';
@@ -13,6 +14,7 @@ import 'screens/auth/splash_screen.dart';
 import 'screens/analytics/analytics_screen.dart';
 import 'screens/crop/crop_detail_screen.dart';
 import 'screens/crop/crop_list_screen.dart';
+import 'screens/crop/edibles_list_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/mandi/mandi_detail_screen.dart';
 import 'screens/mandi/mandi_list_screen.dart';
@@ -25,6 +27,7 @@ import 'screens/tools/market_overview_screen.dart';
 import 'screens/tools/tools_screen.dart';
 import 'screens/tools/weather_screen.dart';
 import 'screens/tools/firestore_seed_screen.dart';
+import 'screens/alerts/price_alert_screen.dart';
 import 'utils/colors.dart';
 import 'utils/constants.dart';
 import 'utils/language_provider.dart';
@@ -34,7 +37,12 @@ Future<void> main() async {
       WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  AppInitializer.ensureInitialized();
+  try {
+    await AppInitializer.ensureInitialized();
+  } catch (e) {
+    debugPrint('AppInitializer failed to initialize: $e');
+  }
+
   runApp(const LanguageScope(child: MyApp()));
 }
 
@@ -50,6 +58,7 @@ class MyApp extends StatelessWidget {
   static const String homeRoute = '/home';
   static const String cropListRoute = '/crop-list';
   static const String cropDetailRoute = '/crop-detail';
+  static const String ediblesListRoute = '/edibles-list';
   static const String mandiListRoute = '/mandi-list';
   static const String mandiDetailRoute = '/mandi-detail';
   static const String analyticsRoute = '/analytics';
@@ -79,7 +88,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: kPrimaryColor,
         scaffoldBackgroundColor: kBackgroundColor,
-        fontFamily: 'Poppins',
+        fontFamily: lang.isUrdu ? GoogleFonts.notoNastaliqUrdu().fontFamily : 'Poppins',
         appBarTheme: const AppBarTheme(
           backgroundColor: kPrimaryColor,
           foregroundColor: Colors.white,
@@ -125,6 +134,7 @@ class MyApp extends StatelessWidget {
         signupRoute: (context) => const SignupScreen(),
         homeRoute: (context) => const HomeScreen(),
         cropListRoute: (context) => const CropListScreen(),
+        ediblesListRoute: (context) => const EdiblesListScreen(),
         mandiListRoute: (context) => const MandiListScreen(),
         analyticsRoute: (context) => const AnalyticsScreen(),
         toolsRoute: (context) => const ToolsScreen(),
@@ -135,6 +145,7 @@ class MyApp extends StatelessWidget {
         aboutRoute: (context) => const AboutAppScreen(),
         profileRoute: (context) => const ProfileScreen(),
         seedFirestoreRoute: (context) => const FirestoreSeedScreen(),
+        PriceAlertScreen.routeName: (context) => const PriceAlertScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == cropDetailRoute) {

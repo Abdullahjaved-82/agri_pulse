@@ -1,3 +1,4 @@
+import '../../utils/app_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -141,7 +142,7 @@ class _NewsScreenState extends State<NewsScreen> {
                                   const SizedBox(width: 8),
                                   Text(
                                     isUrdu ? 'مزید خبریں' : 'More News',
-                                    style: GoogleFonts.dmSans(
+                                    style: AppFonts.dmSans(context, 
                                       fontWeight: FontWeight.w800,
                                       fontSize: 16,
                                       color: kTextDark,
@@ -232,7 +233,7 @@ class _NewsHeaderDelegate extends SliverPersistentHeaderDelegate {
                         if (t < 0.5) ...[
                           Text(
                             isUrdu ? 'تازہ ترین خبریں' : 'Agriculture News',
-                            style: GoogleFonts.playfairDisplay(
+                            style: AppFonts.playfairDisplay(context, 
                               color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 4),
@@ -250,7 +251,7 @@ class _NewsHeaderDelegate extends SliverPersistentHeaderDelegate {
                                 isRefreshing
                                     ? (isUrdu ? 'اپ ڈیٹ ہو رہا ہے...' : 'Refreshing...')
                                     : fetchLabel,
-                                style: GoogleFonts.dmSans(
+                                style: AppFonts.dmSans(context, 
                                   color: Colors.white60, fontSize: 11),
                               ),
                             ],
@@ -258,7 +259,7 @@ class _NewsHeaderDelegate extends SliverPersistentHeaderDelegate {
                         ] else
                           Text(
                             isUrdu ? 'زرعی خبریں' : 'Agri News',
-                            style: GoogleFonts.dmSans(
+                            style: AppFonts.dmSans(context, 
                               color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
                           ),
                       ],
@@ -300,7 +301,7 @@ class _NewsHeaderDelegate extends SliverPersistentHeaderDelegate {
                             shape: BoxShape.circle, color: Colors.white)),
                         const SizedBox(width: 4),
                         Text('LIVE',
-                          style: GoogleFonts.dmSans(
+                          style: AppFonts.dmSans(context, 
                             color: Colors.white, fontSize: 9,
                             fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                       ],
@@ -348,7 +349,7 @@ class _FilterRow extends StatelessWidget {
                   color: sel ? kPrimaryColor : kTextLight.withValues(alpha: 0.3)),
               ),
               child: Text(f,
-                style: GoogleFonts.dmSans(
+                style: AppFonts.dmSans(context, 
                   color: sel ? Colors.white : kTextDark,
                   fontWeight: FontWeight.w700, fontSize: 12)),
             ),
@@ -397,7 +398,7 @@ class _FeaturedCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.red, borderRadius: BorderRadius.circular(6)),
                   child: Text('LIVE AI',
-                    style: GoogleFonts.dmSans(
+                    style: AppFonts.dmSans(context, 
                       color: Colors.white, fontSize: 9,
                       fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                 ),
@@ -419,18 +420,18 @@ class _FeaturedCard extends StatelessWidget {
                       border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     child: Text(article.category,
-                      style: GoogleFonts.dmSans(
+                      style: AppFonts.dmSans(context, 
                         color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
                   ),
                   const SizedBox(height: 6),
                   Text(article.title,
                     maxLines: 2, overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.playfairDisplay(
+                    style: AppFonts.playfairDisplay(context, 
                       color: Colors.white, fontSize: 18,
                       fontWeight: FontWeight.w700, height: 1.2)),
                   const SizedBox(height: 6),
                   Text(article.date,
-                    style: GoogleFonts.dmSans(color: Colors.white60, fontSize: 11)),
+                    style: AppFonts.dmSans(context, color: Colors.white60, fontSize: 11)),
                 ],
               ),
             ),
@@ -487,7 +488,7 @@ class _ArticleCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(article.category,
-                          style: GoogleFonts.dmSans(
+                          style: AppFonts.dmSans(context, 
                             color: _categoryColor(article.category),
                             fontSize: 10, fontWeight: FontWeight.w700)),
                       ),
@@ -499,18 +500,18 @@ class _ArticleCard extends StatelessWidget {
                             shape: BoxShape.circle, color: Colors.green)),
                       const SizedBox(width: 4),
                       Text(article.date,
-                        style: GoogleFonts.dmSans(color: kTextLight, fontSize: 10)),
+                        style: AppFonts.dmSans(context, color: kTextLight, fontSize: 10)),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Text(article.title,
                     maxLines: 2, overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.dmSans(
+                    style: AppFonts.dmSans(context, 
                       color: kTextDark, fontWeight: FontWeight.w700, fontSize: 14)),
                   const SizedBox(height: 4),
                   Text(article.description,
                     maxLines: 2, overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.dmSans(color: kTextLight, fontSize: 12, height: 1.4)),
+                    style: AppFonts.dmSans(context, color: kTextLight, fontSize: 12, height: 1.4)),
                 ],
               ),
             ),
@@ -547,7 +548,7 @@ class _LoadingState extends StatelessWidget {
           const CircularProgressIndicator(color: kPrimaryColor),
           const SizedBox(height: 16),
           Text('Fetching live agriculture news...',
-            style: GoogleFonts.dmSans(color: kTextLight, fontSize: 13)),
+            style: AppFonts.dmSans(context, color: kTextLight, fontSize: 13)),
         ],
       ),
     );
@@ -571,7 +572,7 @@ class _ErrorState extends StatelessWidget {
             const Icon(Icons.wifi_off_rounded, size: 48, color: kTextLight),
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center,
-              style: GoogleFonts.dmSans(color: kTextLight, fontSize: 13)),
+              style: AppFonts.dmSans(context, color: kTextLight, fontSize: 13)),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: onRetry,
@@ -602,7 +603,7 @@ class _EmptyState extends StatelessWidget {
           const Icon(Icons.newspaper_rounded, size: 48, color: kTextLight),
           const SizedBox(height: 12),
           Text('No news in this category',
-            style: GoogleFonts.dmSans(color: kTextLight, fontSize: 13)),
+            style: AppFonts.dmSans(context, color: kTextLight, fontSize: 13)),
         ],
       ),
     );

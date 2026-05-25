@@ -1,3 +1,4 @@
+import '../../utils/app_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -31,12 +32,12 @@ class ProfileScreen extends StatelessWidget {
           // ── Hero Header ─────────────────────────────────────────
           SliverAppBar(
             pinned: true,
-            expandedHeight: 320,
+            expandedHeight: 350,
             backgroundColor: _deep,
             foregroundColor: Colors.white,
             title: Text(
               isUrdu ? 'پروفائل' : 'My Profile',
-              style: GoogleFonts.dmSans(fontWeight: FontWeight.w700),
+              style: AppFonts.dmSans(context, fontWeight: FontWeight.w700),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: _ProfileHero(isUrdu: isUrdu),
@@ -133,7 +134,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     child: Text(
                       isUrdu ? 'AgriPulse v1.0.0 • پاکستان' : 'AgriPulse v1.0.0 • Pakistan',
-                      style: GoogleFonts.dmSans(
+                      style: AppFonts.dmSans(context, 
                         color: kTextLight,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -167,7 +168,7 @@ class ProfileScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Text(
           isUrdu ? 'لاگ آؤٹ کی تصدیق' : 'Confirm Logout',
-          style: GoogleFonts.dmSans(fontWeight: FontWeight.w700),
+          style: AppFonts.dmSans(context, fontWeight: FontWeight.w700),
         ),
         content: Text(
           isUrdu
@@ -236,10 +237,12 @@ class _ProfileHero extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 56, 20, 20),
               child: StreamBuilder<DocumentSnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(FirebaseAuth.instance.currentUser?.uid)
-                    .snapshots(),
+                stream: FirebaseAuth.instance.currentUser?.uid != null
+                    ? FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser!.uid)
+                        .snapshots()
+                    : const Stream.empty(),
                 builder: (context, snap) {
                   final data = snap.data?.data() as Map<String, dynamic>?;
                   final name  = data?['fullName'] ?? (isUrdu ? 'کسان' : 'Farmer');
@@ -263,15 +266,15 @@ class _ProfileHero extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(name,
-                        style: GoogleFonts.playfairDisplay(
+                        style: AppFonts.playfairDisplay(context, 
                           color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700)),
                       const SizedBox(height: 4),
                       Text(phone,
-                        style: GoogleFonts.dmSans(color: Colors.white70, fontSize: 13)),
+                        style: AppFonts.dmSans(context, color: Colors.white70, fontSize: 13)),
                       if (email.isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(email,
-                          style: GoogleFonts.dmSans(color: Colors.white54, fontSize: 11)),
+                          style: AppFonts.dmSans(context, color: Colors.white54, fontSize: 11)),
                       ],
                       const SizedBox(height: 16),
                       // Stat chips
@@ -313,12 +316,12 @@ class _StatChip extends StatelessWidget {
       child: Column(
         children: [
           Text(value,
-            style: GoogleFonts.dmSans(color: Colors.white,
+            style: AppFonts.dmSans(context, color: Colors.white,
                 fontWeight: FontWeight.w800, fontSize: 15)),
           const SizedBox(height: 2),
           Text(label,
             textAlign: TextAlign.center,
-            style: GoogleFonts.dmSans(color: Colors.white70, fontSize: 10)),
+            style: AppFonts.dmSans(context, color: Colors.white70, fontSize: 10)),
         ],
       ),
     );
@@ -336,7 +339,7 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4, bottom: 4),
       child: Text(
         title.toUpperCase(),
-        style: GoogleFonts.dmSans(
+        style: AppFonts.dmSans(context, 
           fontSize: 11,
           fontWeight: FontWeight.w700,
           color: kTextLight,
@@ -403,14 +406,14 @@ class _PremiumTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(title,
-                        style: GoogleFonts.dmSans(
+                        style: AppFonts.dmSans(context, 
                           color: titleColor ?? kTextDark,
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                         )),
                       const SizedBox(height: 2),
                       Text(subtitle,
-                        style: GoogleFonts.dmSans(color: kTextLight, fontSize: 12)),
+                        style: AppFonts.dmSans(context, color: kTextLight, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -464,13 +467,13 @@ class _LanguagePremiumTile extends StatelessWidget {
                 children: [
                   Text(
                     isUrdu ? 'زبان' : 'Language',
-                    style: GoogleFonts.dmSans(
+                    style: AppFonts.dmSans(context, 
                       color: kTextDark, fontWeight: FontWeight.w700, fontSize: 14),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     isUrdu ? 'اردو فعال ہے' : 'English is active',
-                    style: GoogleFonts.dmSans(color: kTextLight, fontSize: 12),
+                    style: AppFonts.dmSans(context, color: kTextLight, fontSize: 12),
                   ),
                 ],
               ),
@@ -507,7 +510,7 @@ class _LanguagePremiumTile extends StatelessWidget {
                       left: 6, top: 0, bottom: 0,
                       child: Center(
                         child: Text('EN',
-                          style: GoogleFonts.dmSans(
+                          style: AppFonts.dmSans(context, 
                             fontSize: 10, fontWeight: FontWeight.w800,
                             color: isUrdu ? Colors.white54 : Colors.white)),
                       ),
@@ -516,7 +519,7 @@ class _LanguagePremiumTile extends StatelessWidget {
                       right: 6, top: 0, bottom: 0,
                       child: Center(
                         child: Text('UR',
-                          style: GoogleFonts.dmSans(
+                          style: AppFonts.dmSans(context, 
                             fontSize: 10, fontWeight: FontWeight.w800,
                             color: isUrdu ? Colors.white : kTextLight)),
                       ),

@@ -6,6 +6,9 @@ import '../../main.dart';
 import '../profile/profile_screen.dart';
 import '../../utils/colors.dart';
 import '../../utils/constants.dart';
+import '../../services/price_alert_service.dart';
+import '../../models/price_alert_model.dart';
+import '../alerts/price_alert_screen.dart';
 
 class ToolsScreen extends StatefulWidget {
   static const String routeName = '/tools';
@@ -49,11 +52,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
   late List<String> _cropOptions;
   String? _selectedCrop;
   String _selectedCondition = 'Above';
-
-  final List<_AlertItem> _activeAlerts = [
-    _AlertItem(id: 'wheat-3500', cropName: 'Wheat', condition: 'Above', targetPrice: 3500),
-    _AlertItem(id: 'rice-4500', cropName: 'Rice', condition: 'Below', targetPrice: 4500),
-  ];
+  bool _alertsLoaded = false;
 
   @override
   void initState() {
@@ -65,6 +64,16 @@ class _ToolsScreenState extends State<ToolsScreen> {
     _cropOptions.sort();
     if (_cropOptions.isNotEmpty) {
       _selectedCrop = _cropOptions.first;
+    }
+    _loadAlerts();
+  }
+
+  Future<void> _loadAlerts() async {
+    await PriceAlertService.instance.load();
+    if (mounted) {
+      setState(() {
+        _alertsLoaded = true;
+      });
     }
   }
 
@@ -101,7 +110,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
     });
   }
 
-  void _setAlert() {
+  Future<void> _setAlert() async {
     final String? crop = _selectedCrop;
     final double? targetPrice = _parseNumeric(_alertPriceController.text);
 
@@ -112,28 +121,30 @@ class _ToolsScreenState extends State<ToolsScreen> {
       return;
     }
 
-    setState(() {
-      _activeAlerts.insert(
-        0,
-        _AlertItem(
-          id: '$crop-${DateTime.now().millisecondsSinceEpoch}',
-          cropName: crop,
-          condition: _selectedCondition,
-          targetPrice: targetPrice,
-        ),
-      );
-      _alertPriceController.clear();
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Alert saved!')),
+    final alert = PriceAlertModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      commodityName: crop,
+      targetPrice: targetPrice,
+      condition: _selectedCondition.toLowerCase(), // 'above' or 'below'
+      mandiId: 'default',
+      enabled: true,
+      createdAt: DateTime.now(),
     );
+
+    await PriceAlertService.instance.addAlert(alert);
+    _alertPriceController.clear();
+    await _loadAlerts();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Alert saved!')),
+      );
+    }
   }
 
-  void _removeAlert(String id) {
-    setState(() {
-      _activeAlerts.removeWhere((alert) => alert.id == id);
-    });
+  Future<void> _removeAlert(String id) async {
+    await PriceAlertService.instance.removeAlert(id);
+    await _loadAlerts();
   }
 
   @override
@@ -297,6 +308,8 @@ class _ToolsScreenState extends State<ToolsScreen> {
   }
 
   Widget _buildPriceAlertsCard() {
+    final alerts = PriceAlertService.instance.alerts;
+
     return _SectionCard(
       headerColor: kHighlightColor,
       headerTitle: 'Price Alerts',
@@ -390,16 +403,42 @@ class _ToolsScreenState extends State<ToolsScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Active Alerts',
-            style: TextStyle(
-              color: kTextDark,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Active Alerts',
+                style: TextStyle(
+                  color: kTextDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => Navigator.of(context)
+                    .pushNamed(PriceAlertScreen.routeName)
+                    .then((_) => _loadAlerts()),
+                icon: const Icon(Icons.open_in_new_rounded, size: 14, color: kPrimaryColor),
+                label: const Text(
+                  'Manage Alerts',
+                  style: TextStyle(
+                    color: kPrimaryColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
-          if (_activeAlerts.isEmpty)
+          if (!_alertsLoaded)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (alerts.isEmpty)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
@@ -413,7 +452,16 @@ class _ToolsScreenState extends State<ToolsScreen> {
               ),
             )
           else
-            ..._activeAlerts.map((alert) {
+            ...alerts.map((alert) {
+              final crop = DummyData.crops.firstWhere(
+                (c) => c['name'] == alert.commodityName,
+                orElse: () => {'imageEmoji': '🌾', 'price': 0.0},
+              );
+              final currentPrice = (crop['price'] as num?)?.toDouble() ?? 0;
+              final isTriggered = alert.condition == 'above'
+                  ? currentPrice >= alert.targetPrice
+                  : currentPrice <= alert.targetPrice;
+
               return Dismissible(
                 key: ValueKey(alert.id),
                 background: Container(
@@ -434,38 +482,64 @@ class _ToolsScreenState extends State<ToolsScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: kAccentColor.withValues(alpha: 0.4)),
+                    border: Border.all(
+                      color: isTriggered && alert.enabled
+                          ? Colors.orange.shade400
+                          : kAccentColor.withValues(alpha: 0.4),
+                      width: isTriggered && alert.enabled ? 1.6 : 1.0,
+                    ),
                   ),
                   child: ListTile(
+                    leading: Text(crop['imageEmoji'] as String? ?? '🌾',
+                        style: const TextStyle(fontSize: 24)),
                     title: Text(
-                      alert.cropName,
+                      alert.commodityName,
                       style: const TextStyle(
                         color: kTextDark,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    subtitle: Text(
-                      '${alert.cropName} ${alert.condition == 'Above' ? '>' : '<'} ${_formatNum(alert.targetPrice)} PKR',
-                      style: const TextStyle(color: kTextLight),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${alert.condition == 'above' ? '↑ ABOVE' : '↓ BELOW'} ${_formatNum(alert.targetPrice)} PKR',
+                          style: TextStyle(
+                            color: alert.condition == 'above'
+                                ? Colors.green.shade700
+                                : Colors.red.shade700,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Current: ${_formatNum(currentPrice)} PKR',
+                          style: const TextStyle(color: kTextLight, fontSize: 11),
+                        ),
+                      ],
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Text(
-                            'Active',
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
+                        if (isTriggered && alert.enabled) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'TRIGGERED',
+                              style: TextStyle(
+                                color: Colors.orange.shade800,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 4),
+                        ],
                         IconButton(
                           onPressed: () => _removeAlert(alert.id),
                           icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -592,17 +666,5 @@ class _ResultRow extends StatelessWidget {
   }
 }
 
-class _AlertItem {
-  final String id;
-  final String cropName;
-  final String condition;
-  final double targetPrice;
 
-  const _AlertItem({
-    required this.id,
-    required this.cropName,
-    required this.condition,
-    required this.targetPrice,
-  });
-}
 

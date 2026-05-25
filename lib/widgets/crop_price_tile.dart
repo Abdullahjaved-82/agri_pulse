@@ -6,6 +6,7 @@ class CropPriceTile extends StatelessWidget {
   final String emoji;
   final String name;
   final double price;
+  final double? previousPrice;
   final String unit;
   final String trend;
   final double percentChange;
@@ -18,36 +19,43 @@ class CropPriceTile extends StatelessWidget {
     required this.unit,
     required this.trend,
     required this.percentChange,
+    this.previousPrice,
   });
 
   @override
   Widget build(BuildContext context) {
-    final IconData trendIcon;
     final Color trendColor;
+    final IconData trendIcon;
+    final String trendIndicator;
 
     switch (trend) {
       case 'up':
-        trendIcon = Icons.arrow_upward;
-        trendColor = Colors.green;
+        trendColor = Colors.green.shade600;
+        trendIcon = Icons.arrow_upward_rounded;
+        trendIndicator = '🟢';
         break;
       case 'down':
-        trendIcon = Icons.arrow_downward;
-        trendColor = Colors.red;
+        trendColor = Colors.red.shade600;
+        trendIcon = Icons.arrow_downward_rounded;
+        trendIndicator = '🔴';
         break;
       default:
-        trendIcon = Icons.arrow_forward;
         trendColor = Colors.amber.shade700;
+        trendIcon = Icons.remove_rounded;
+        trendIndicator = '⚪';
     }
 
+    final double prevP = previousPrice ?? price;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -55,7 +63,7 @@ class CropPriceTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 26)),
+          Text(emoji, style: const TextStyle(fontSize: 28)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -65,29 +73,63 @@ class CropPriceTile extends StatelessWidget {
                   name,
                   style: const TextStyle(
                     color: kTextDark,
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'PKR ${price.toStringAsFixed(0)} • $unit',
-                  style: const TextStyle(color: kTextLight, fontSize: 13),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Text(
+                      '$trendIndicator Old: ${prevP.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        color: kTextLight,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Text(' → ', style: TextStyle(color: kTextLight, fontSize: 11)),
+                    Text(
+                      'New: ${price.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        color: trendColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Icon(trendIcon, color: trendColor, size: 18),
-              const SizedBox(width: 3),
               Text(
-                '${percentChange.toStringAsFixed(1)}%',
-                style: TextStyle(
-                  color: trendColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                'PKR ${price.toStringAsFixed(0)}',
+                style: const TextStyle(
+                  color: kPrimaryColor,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
                 ),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(trendIcon, color: trendColor, size: 14),
+                  const SizedBox(width: 2),
+                  Text(
+                    trend == 'stable'
+                        ? '0.0%'
+                        : '${trend == 'up' ? '+' : '-'}${percentChange.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      color: trendColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -10,22 +10,23 @@ import '../profile/profile_screen.dart';
 import 'crop_detail_screen.dart';
 import '../../utils/language_provider.dart';
 
-class CropListScreen extends StatefulWidget {
-  static const String routeName = '/crop-list';
+class EdiblesListScreen extends StatefulWidget {
+  static const String routeName = '/edibles-list';
 
-  const CropListScreen({super.key});
+  const EdiblesListScreen({super.key});
 
   @override
-  State<CropListScreen> createState() => _CropListScreenState();
+  State<EdiblesListScreen> createState() => _EdiblesListScreenState();
 }
 
-class _CropListScreenState extends State<CropListScreen> with SingleTickerProviderStateMixin {
+class _EdiblesListScreenState extends State<EdiblesListScreen> with SingleTickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
 
   final List<String> _filters = const [
     'All',
-    'Grain Market',
-    'Cash Crops',
+    'Vegetables',
+    'Fruits',
+    'Meat',
   ];
 
   late TabController _tabController;
@@ -63,15 +64,19 @@ class _CropListScreenState extends State<CropListScreen> with SingleTickerProvid
 
       if (_activeFilter == 'All') {
         final cat = crop.category.toLowerCase();
-        return cat.contains('grain') || cat.contains('cash');
+        return cat.contains('vegetable') || cat.contains('fruit') || cat.contains('meat');
       }
 
-      if (_activeFilter == 'Grain Market') {
-        return crop.category.toLowerCase().contains('grain');
+      if (_activeFilter == 'Vegetables') {
+        return crop.category.toLowerCase().contains('vegetable');
       }
 
-      if (_activeFilter == 'Cash Crops') {
-        return crop.category.toLowerCase().contains('cash');
+      if (_activeFilter == 'Fruits') {
+        return crop.category.toLowerCase().contains('fruit');
+      }
+
+      if (_activeFilter == 'Meat') {
+        return crop.category.toLowerCase().contains('meat');
       }
 
       return true;
@@ -96,7 +101,7 @@ class _CropListScreenState extends State<CropListScreen> with SingleTickerProvid
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(isUrdu ? 'فصلوں کی قیمتیں' : 'Crop Prices'),
+            title: Text(isUrdu ? 'خوراک کی قیمتیں' : 'Edibles Prices'),
             backgroundColor: kPrimaryColor,
             foregroundColor: Colors.white,
             actions: [
@@ -119,8 +124,9 @@ class _CropListScreenState extends State<CropListScreen> with SingleTickerProvid
                 String displayFilter = filter;
                 if (isUrdu) {
                   if (filter == 'All') displayFilter = 'سب';
-                  if (filter == 'Grain Market') displayFilter = 'اناج منڈی';
-                  if (filter == 'Cash Crops') displayFilter = 'نقد آور فصلیں';
+                  if (filter == 'Vegetables') displayFilter = 'سبزیاں';
+                  if (filter == 'Fruits') displayFilter = 'پھل';
+                  if (filter == 'Meat') displayFilter = 'گوشت';
                 }
                 return Tab(text: displayFilter);
               }).toList(),

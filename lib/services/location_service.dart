@@ -1,5 +1,5 @@
 import 'package:geolocator/geolocator.dart';
-import 'dart:math' show cos, sqrt, asin, sin, pi;
+import 'dart:math' show cos, sqrt, asin;
 
 import '../models/mandi_model.dart';
 
@@ -31,11 +31,24 @@ class LocationService {
     // continue accessing the position of the device.
     try {
       return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
     } catch (e) {
       return null;
     }
+  }
+
+  /// Check if location permission is permanently denied.
+  Future<bool> isPermissionPermanentlyDenied() async {
+    final permission = await Geolocator.checkPermission();
+    return permission == LocationPermission.deniedForever;
+  }
+
+  /// Open device location settings.
+  Future<bool> openLocationSettings() async {
+    return Geolocator.openLocationSettings();
   }
 
   /// Haversine formula to calculate distance between two coordinates in kilometers
@@ -46,6 +59,38 @@ class LocationService {
         c((lat2 - lat1) * p) / 2 +
         c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
     return 12742 * asin(sqrt(a)); // 2 * R; R = 6371 km
+  }
+
+  /// Returns the single closest mandi to the user's position.
+  MandiModel? getClosestMandi(List<MandiModel> mandis, Position position) {
+    if (mandis.isEmpty) return null;
+
+    MandiModel? closest;
+    double minDist = double.infinity;
+
+    for (final mandi in mandis) {
+      if (mandi.latitude == 0.0 && mandi.longitude == 0.0) continue;
+      final dist = calculateDistance(
+        position.latitude, position.longitude,
+        mandi.latitude, mandi.longitude,
+      );
+      if (dist < minDist) {
+        minDist = dist;
+        closest = MandiModel(
+          id: mandi.id,
+          name: mandi.name,
+          city: mandi.city,
+          province: mandi.province,
+          distance: '${dist.toStringAsFixed(1)} km',
+          isOpen: mandi.isOpen,
+          totalCrops: mandi.totalCrops,
+          latitude: mandi.latitude,
+          longitude: mandi.longitude,
+        );
+      }
+    }
+
+    return closest;
   }
 
   /// Sorts a list of mandis by distance from the user's current location.
@@ -97,5 +142,17 @@ class LocationService {
     });
 
     return sorted;
+  }
+
+  Future<bool> isServiceEnabled() async {
+    return Geolocator.isLocationServiceEnabled();
+  }
+
+  Future<LocationPermission> checkPermission() async {
+    return Geolocator.checkPermission();
+  }
+
+  Future<bool> openAppSettings() async {
+    return await Geolocator.openAppSettings();
   }
 }

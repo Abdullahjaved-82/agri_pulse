@@ -9,6 +9,7 @@ class MandiCard extends StatelessWidget {
   final bool isOpen;
   final String? province;
   final int? totalCrops;
+  final bool isNearest;
   final VoidCallback? onTap;
 
   const MandiCard({
@@ -19,6 +20,7 @@ class MandiCard extends StatelessWidget {
     required this.isOpen,
     this.province,
     this.totalCrops,
+    this.isNearest = false,
     this.onTap,
   });
 
@@ -43,6 +45,32 @@ class MandiCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (isNearest)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1B4332), Color(0xFF2D6A4F)],
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('📍', style: TextStyle(fontSize: 12)),
+                  SizedBox(width: 4),
+                  Text(
+                    'Nearest to you',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

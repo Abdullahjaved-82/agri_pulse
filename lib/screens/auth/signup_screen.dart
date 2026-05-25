@@ -1,3 +1,4 @@
+import '../../utils/app_fonts.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -141,7 +142,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   children: [
                     Text(
                       isUrdu ? 'اپنا اکاؤنٹ بنائیں' : 'Create your account',
-                      style: GoogleFonts.dmSans(
+                      style: AppFonts.dmSans(context, 
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
                         color: _deep,
@@ -270,7 +271,7 @@ class _WaveHeader extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 title,
-                style: GoogleFonts.dmSans(
+                style: AppFonts.dmSans(context, 
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -445,11 +446,11 @@ class _FooterRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(question, style: GoogleFonts.dmSans(fontSize: 13)),
+        Text(question, style: AppFonts.dmSans(context, fontSize: 13)),
         TextButton(
           onPressed: onTap,
           style: TextButton.styleFrom(foregroundColor: _bright),
-          child: Text(action, style: GoogleFonts.dmSans(fontSize: 13)),
+          child: Text(action, style: AppFonts.dmSans(context, fontSize: 13)),
         ),
       ],
     );

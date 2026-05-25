@@ -1,10 +1,9 @@
-import 'dart:math' as math;
+import '../../utils/app_fonts.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 import '../../main.dart';
 import '../../data/dummy_data.dart';
 import '../../models/mandi_model.dart';
@@ -16,6 +15,8 @@ import '../../widgets/crop_price_tile.dart';
 import '../../widgets/mandi_card.dart';
 import '../../widgets/news_card.dart';
 import '../../screens/crop/crop_list_screen.dart';
+import '../../screens/crop/crop_detail_screen.dart';
+import '../../screens/crop/edibles_list_screen.dart';
 import '../../screens/mandi/mandi_detail_screen.dart';
 import '../../screens/mandi/mandi_list_screen.dart';
 import '../../screens/news/news_detail_screen.dart';
@@ -25,6 +26,9 @@ import '../../screens/tools/tools_screen.dart';
 import '../../widgets/ai_advisory_card.dart';
 import '../../services/firestore_service.dart';
 import '../../utils/language_provider.dart';
+import '../../models/crop_model.dart';
+import '../../services/price_alert_service.dart';
+import '../../screens/alerts/price_alert_screen.dart';
 
 // ── Palette extras ────────────────────────────────────────────────────────────
 const Color _deep   = Color(0xFF1B4332);
@@ -51,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onViewAllMandis: () => Navigator.of(context).pushNamed(MandiListScreen.routeName),
       ),
       const CropListScreen(),
-      const MandiListScreen(),
+      const EdiblesListScreen(),
       const ToolsScreen(),
       const NewsScreen(),
     ];
@@ -64,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: Scaffold(
         backgroundColor: kBackgroundColor,
-        body: IndexedStack(index: _selectedIndex, children: tabs),
+        body: tabs[_selectedIndex],
         bottomNavigationBar: _PremiumNavBar(
           currentIndex: _selectedIndex,
           onTap: (i) => setState(() => _selectedIndex = i),
@@ -80,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Text(isUrdu ? 'AgriPulse سے باہر نکلیں؟' : 'Exit AgriPulse?',
-            style: GoogleFonts.dmSans(fontWeight: FontWeight.w700)),
+            style: AppFonts.dmSans(context, fontWeight: FontWeight.w700)),
         content: Text(isUrdu ? 'کیا آپ ایپ کو بند کرنا چاہتے ہیں؟' : 'Do you want to close the app?'),
         actions: [
           TextButton(
@@ -115,7 +119,7 @@ class _PremiumNavBar extends StatelessWidget {
     final items = [
       (icon: Icons.home_rounded,        label: isUrdu ? 'ہوم' : 'Home'),
       (icon: Icons.grass_rounded,       label: isUrdu ? 'فصلیں' : 'Crops'),
-      (icon: Icons.storefront_rounded,  label: isUrdu ? 'منڈی' : 'Mandi'),
+      (icon: Icons.local_dining_rounded,label: isUrdu ? 'خوراک' : 'Edibles'),
       (icon: Icons.calculate_rounded,   label: isUrdu ? 'ٹولز' : 'Tools'),
       (icon: Icons.newspaper_rounded,   label: isUrdu ? 'خبریں' : 'News'),
     ];
@@ -135,37 +139,41 @@ class _PremiumNavBar extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: List.generate(items.length, (i) {
               final item = items[i];
               final bool sel = i == currentIndex;
-              return GestureDetector(
-                onTap: () => onTap(i),
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: sel ? kPrimaryColor.withValues(alpha: 0.10) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(item.icon,
-                          size: 22,
-                          color: sel ? kPrimaryColor : kTextLight),
-                      const SizedBox(height: 3),
-                      Text(
-                        item.label,
-                        style: GoogleFonts.dmSans(
-                          fontSize: 10,
-                          fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
-                          color: sel ? kPrimaryColor : kTextLight,
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => onTap(i),
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutCubic,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: sel ? kPrimaryColor.withValues(alpha: 0.10) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(item.icon,
+                            size: 22,
+                            color: sel ? kPrimaryColor : kTextLight),
+                        const SizedBox(height: 3),
+                        Text(
+                          item.label,
+                          textAlign: TextAlign.center,
+                          style: AppFonts.dmSans(context,
+                            fontSize: 10,
+                            fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
+                            color: sel ? kPrimaryColor : kTextLight,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -193,19 +201,127 @@ class _HomeTabState extends State<_HomeTab> {
   List<GroqNewsArticle> _homeNews = [];
   bool _newsLoading = true;
   Position? _currentPosition;
+  int _activeAlertsCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadNews();
     _initLocation();
+    _loadAlerts();
+    if (kDebugMode) {
+      _seedFirebaseData();
+    }
+  }
+
+  Future<void> _loadAlerts() async {
+    try {
+      await PriceAlertService.instance.load();
+      if (mounted) {
+        setState(() {
+          _activeAlertsCount = PriceAlertService.instance.activeCount;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('PriceAlerts load failed: $e');
+      }
+    }
+  }
+
+  Future<void> _seedFirebaseData() async {
+    try {
+      final svc = FirestoreService();
+      await svc.seedInitialData(DummyData.crops, cropPriceHistory);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Firebase seeding failed/skipped: $e');
+      }
+    }
   }
 
   Future<void> _initLocation() async {
-    final pos = await _locSvc.getCurrentLocation();
-    if (mounted && pos != null) {
-      setState(() => _currentPosition = pos);
+    try {
+      final pos = await _locSvc.getCurrentLocation();
+      if (!mounted) return;
+      if (pos != null) {
+        setState(() => _currentPosition = pos);
+      } else {
+        await _showLocationDialog();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Location initialization failed: $e');
+      }
     }
+  }
+
+  Future<void> _showLocationDialog() async {
+    final isUrdu = LanguageScope.of(context).isUrdu;
+    final serviceEnabled = await _locSvc.isServiceEnabled();
+    final permission = await _locSvc.checkPermission();
+    if (!mounted) return;
+
+    final String title;
+    final String message;
+    final String actionLabel;
+    final Future<bool> Function() action;
+
+    if (!serviceEnabled) {
+      title = isUrdu ? 'لوکیشن بند ہے' : 'Location Disabled';
+      message = isUrdu
+          ? 'قریبی منڈیاں دیکھنے کے لیے لوکیشن آن کریں۔'
+          : 'Turn on location services to see nearby mandis.';
+      actionLabel = isUrdu ? 'لوکیشن آن کریں' : 'Open Location';
+      action = _locSvc.openLocationSettings;
+    } else if (permission == LocationPermission.deniedForever) {
+      title = isUrdu ? 'اجازت مستقل طور پر بند ہے' : 'Permission Permanently Denied';
+      message = isUrdu
+          ? 'اجازت دینے کے لیے ایپ سیٹنگز کھولیں۔'
+          : 'Open app settings to grant location permission.';
+      actionLabel = isUrdu ? 'ایپ سیٹنگز' : 'App Settings';
+      action = _locSvc.openAppSettings;
+    } else {
+      title = isUrdu ? 'لوکیشن کی اجازت درکار ہے' : 'Location Permission Needed';
+      message = isUrdu
+          ? 'قریبی منڈیاں اور فاصلے دکھانے کے لیے اجازت دیں۔'
+          : 'Allow location permission to show nearby mandis and distance.';
+      actionLabel = isUrdu ? 'اجازت دیں' : 'Allow';
+      action = () async {
+        await _locSvc.getCurrentLocation();
+        return true;
+      };
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(title, style: AppFonts.dmSans(ctx, fontWeight: FontWeight.w700)),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(isUrdu ? 'بعد میں' : 'Not now'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await action();
+              if (mounted) {
+                await _initLocation();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kPrimaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(actionLabel),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadNews() async {
@@ -217,10 +333,11 @@ class _HomeTabState extends State<_HomeTab> {
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
     final isUrdu = LanguageScope.of(context).isUrdu;
     final svc            = FirestoreService();
     final fallbackCrops  = DummyData.crops.take(4).toList();
-    final fallbackMandis = DummyData.mandis.take(2).toList();
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -236,7 +353,11 @@ class _HomeTabState extends State<_HomeTab> {
             const SizedBox(height: 20),
 
             // ── Stat pills ──────────────────────────────────────
-            _StatRow(isUrdu: isUrdu),
+            _StatRow(
+              isUrdu: isUrdu,
+              activeAlertsCount: _activeAlertsCount,
+              onRefreshAlerts: _loadAlerts,
+            ),
 
             const SizedBox(height: 20),
 
@@ -306,27 +427,28 @@ class _HomeTabState extends State<_HomeTab> {
             ),
             const SizedBox(height: 10),
             StreamBuilder<List<Map<String, dynamic>>>(
-              stream: svc.watchCrops(limit: 4),
+              stream: svc.watchCrops(limit: 4, orderByField: 'updatedAt', descending: true),
               builder: (context, snap) {
-                final crops = (snap.data?.isNotEmpty == true)
+                final cropsData = (snap.data?.isNotEmpty == true)
                     ? snap.data!
                     : fallbackCrops;
+                final List<CropModel> crops = cropsData.map((c) => CropModel.fromMap(c)).toList();
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     children: crops.map((crop) {
-                      final double price = (crop['price'] as num).toDouble();
-                      final double prev  = (crop['previousPrice'] as num).toDouble();
-                      final String trend = crop['trend'] as String;
+                      final double price = crop.price;
+                      final double prev  = crop.previousPrice;
                       final double pct   = prev == 0 ? 0
                           : ((price - prev) / prev * 100).abs();
                       return CropPriceTile(
-                        emoji:         crop['imageEmoji'] as String,
-                        name:          crop['name'] as String,
+                        emoji:         crop.imageEmoji,
+                        name:          crop.name,
                         price:         price,
-                        unit:          crop['unit'] as String,
-                        trend:         trend,
-                        percentChange: trend == 'stable' ? 0 : pct,
+                        previousPrice: prev,
+                        unit:          crop.unit,
+                        trend:         crop.trend,
+                        percentChange: crop.trend == 'stable' ? 0 : pct,
                       );
                     }).toList(),
                   ),
@@ -433,7 +555,7 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override double get maxExtent => _maxH;
   @override double get minExtent => _minH;
-  @override bool shouldRebuild(covariant _HeroHeaderDelegate old) => false;
+  @override bool shouldRebuild(covariant _HeroHeaderDelegate old) => old.isUrdu != isUrdu;
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
@@ -499,16 +621,18 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
                     children: [
                       if (t < 0.6)
                         StreamBuilder<DocumentSnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(FirebaseAuth.instance.currentUser?.uid)
-                              .snapshots(),
+                          stream: FirebaseAuth.instance.currentUser?.uid != null
+                              ? FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(FirebaseAuth.instance.currentUser!.uid)
+                                  .snapshots()
+                              : const Stream.empty(),
                           builder: (context, snap) {
                             final data = snap.data?.data() as Map<String, dynamic>?;
                             final name = data?['fullName'] ?? (isUrdu ? 'کسان' : 'Farmer');
                             return Text(
                               isUrdu ? 'اچھا دن، $name 👋' : 'Good day, $name 👋',
-                              style: GoogleFonts.dmSans(
+                              style: AppFonts.dmSans(context, 
                                 color: Colors.white.withValues(alpha: 0.80),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -522,7 +646,7 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
                           children: [
                             TextSpan(
                               text: 'Agri',
-                              style: GoogleFonts.playfairDisplay(
+                              style: AppFonts.playfairDisplay(context, 
                                 color: Colors.white,
                                 fontSize: _lerp(28, 20, t),
                                 fontWeight: FontWeight.w700,
@@ -530,7 +654,7 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
                             ),
                             TextSpan(
                               text: 'Pulse',
-                              style: GoogleFonts.playfairDisplay(
+                              style: AppFonts.playfairDisplay(context, 
                                 color: _accent,
                                 fontSize: _lerp(28, 20, t),
                                 fontWeight: FontWeight.w700,
@@ -543,7 +667,7 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
                         const SizedBox(height: 4),
                         Text(
                           isUrdu ? 'مارکیٹ انٹیلیجنس' : 'MARKET INTELLIGENCE',
-                          style: GoogleFonts.dmSans(
+                          style: AppFonts.dmSans(context, 
                             color: Colors.white.withValues(alpha: 0.45),
                             fontSize: 9,
                             letterSpacing: 3.0,
@@ -593,12 +717,19 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
 // ── Stat Row ──────────────────────────────────────────────────────────────────
 class _StatRow extends StatelessWidget {
   final bool isUrdu;
-  const _StatRow({required this.isUrdu});
+  final int activeAlertsCount;
+  final VoidCallback onRefreshAlerts;
+
+  const _StatRow({
+    required this.isUrdu,
+    required this.activeAlertsCount,
+    required this.onRefreshAlerts,
+  });
   
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 100,
+      height: 112,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -609,6 +740,7 @@ class _StatRow extends StatelessWidget {
             label: isUrdu ? "اوپن\nمارکیٹس" : "Open\nMarkets",
             iconColor: const Color(0xFF2D6A4F),
             bgColor: const Color(0xFFEBF5EC),
+            onTap: () => Navigator.of(context).pushNamed(MandiListScreen.routeName),
           ),
           const SizedBox(width: 12),
           _StatCard(
@@ -617,14 +749,29 @@ class _StatRow extends StatelessWidget {
             label: isUrdu ? "گندم\nآج" : "Wheat\nToday",
             iconColor: const Color(0xFFF9A825),
             bgColor: const Color(0xFFFFF8E1),
+            onTap: () {
+              final wheatCrop = DummyData.crops.firstWhere(
+                (c) => (c['name'] as String).toLowerCase() == 'wheat',
+                orElse: () => DummyData.crops.first,
+              );
+              Navigator.of(context).pushNamed(
+                CropDetailScreen.routeName,
+                arguments: CropModel.fromMap(wheatCrop),
+              );
+            },
           ),
           const SizedBox(width: 12),
           _StatCard(
             icon: Icons.notifications_active_rounded,
-            value: '2',
+            value: '$activeAlertsCount',
             label: isUrdu ? "پرائس\nالرٹس" : "Price\nAlerts",
             iconColor: const Color(0xFFE53935),
             bgColor: const Color(0xFFFFEBEE),
+            onTap: () {
+              Navigator.of(context).pushNamed(PriceAlertScreen.routeName).then((_) {
+                onRefreshAlerts();
+              });
+            },
           ),
           const SizedBox(width: 12),
           _StatCard(
@@ -633,6 +780,7 @@ class _StatRow extends StatelessWidget {
             label: isUrdu ? "لاہور\nموسم" : "Lahore\nWeather",
             iconColor: const Color(0xFF1565C0),
             bgColor: const Color(0xFFE3F2FD),
+            onTap: () => Navigator.of(context).pushNamed(MyApp.weatherRoute),
           ),
         ],
       ),
@@ -646,57 +794,67 @@ class _StatCard extends StatelessWidget {
   final String label;
   final Color iconColor;
   final Color bgColor;
+  final VoidCallback? onTap;
+
   const _StatCard({
-    required this.icon, required this.value,
-    required this.label, required this.iconColor, required this.bgColor,
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.iconColor,
+    required this.bgColor,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 106,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 28, height: 28,
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(7),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 106,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            child: Icon(icon, color: iconColor, size: 16),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: GoogleFonts.dmSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: kTextDark,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 28, height: 28,
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Icon(icon, color: iconColor, size: 16),
             ),
-          ),
-          Text(
-            label,
-            style: GoogleFonts.dmSans(
-              fontSize: 9.5,
-              color: kTextLight,
-              height: 1.3,
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: AppFonts.dmSans(context, 
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: kTextDark,
+              ),
             ),
-          ),
-        ],
+            Text(
+              label,
+              style: AppFonts.dmSans(context, 
+                fontSize: 9.5,
+                color: kTextLight,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -752,7 +910,7 @@ class _QuickTile extends StatelessWidget {
                   Icon(icon, color: Colors.white, size: 22),
                   Text(
                     label,
-                    style: GoogleFonts.dmSans(
+                    style: AppFonts.dmSans(context, 
                       color: Colors.white,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -795,7 +953,7 @@ class _SectionLabel extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: GoogleFonts.dmSans(
+                style: AppFonts.dmSans(context, 
                   color: kTextDark,
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
@@ -814,7 +972,7 @@ class _SectionLabel extends StatelessWidget {
                 ),
                 child: Text(
                   actionText!,
-                  style: GoogleFonts.dmSans(
+                  style: AppFonts.dmSans(context, 
                     color: kPrimaryColor,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,

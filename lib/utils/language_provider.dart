@@ -32,10 +32,11 @@ class LanguageScope extends StatefulWidget {
   @override
   State<LanguageScope> createState() => _LanguageScopeState();
 
+  static final LanguageNotifier _fallback = LanguageNotifier();
+
   static LanguageNotifier of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<_LanguageInherited>()!
-        .notifier!;
+    final inherited = context.dependOnInheritedWidgetOfExactType<_LanguageInherited>();
+    return inherited?.notifier ?? _fallback;
   }
 }
 

@@ -1,3 +1,5 @@
+import '../data/dummy_data.dart';
+
 class CropModel {
   final int id;
   final String name;
@@ -22,16 +24,28 @@ class CropModel {
   });
 
   factory CropModel.fromMap(Map<String, dynamic> map) {
+    final String name = map['name'] as String? ?? '';
+    
+    // Find matching dummy crop to recover rich metadata (emoji, urduName, category, etc.)
+    final dummyCrop = dummyCrops.firstWhere(
+      (c) {
+        final cName = (c['name'] as String).toLowerCase();
+        final sName = name.toLowerCase();
+        return cName.contains(sName) || sName.contains(cName);
+      },
+      orElse: () => <String, dynamic>{},
+    );
+
     return CropModel(
-      id: map['id'] as int,
-      name: map['name'] as String,
-      urduName: map['urduName'] as String,
-      price: (map['price'] as num).toDouble(),
-      previousPrice: (map['previousPrice'] as num).toDouble(),
-      trend: map['trend'] as String,
-      category: map['category'] as String,
-      imageEmoji: map['imageEmoji'] as String,
-      unit: map['unit'] as String,
+      id: map['id'] as int? ?? dummyCrop['id'] as int? ?? 0,
+      name: name.isNotEmpty ? name : (dummyCrop['name'] as String? ?? ''),
+      urduName: map['urduName'] as String? ?? dummyCrop['urduName'] as String? ?? '',
+      price: (map['price'] as num?)?.toDouble() ?? (dummyCrop['price'] as num?)?.toDouble() ?? 0.0,
+      previousPrice: (map['previousPrice'] as num?)?.toDouble() ?? (dummyCrop['previousPrice'] as num?)?.toDouble() ?? 0.0,
+      trend: map['trend'] as String? ?? dummyCrop['trend'] as String? ?? 'stable',
+      category: map['category'] as String? ?? dummyCrop['category'] as String? ?? '',
+      imageEmoji: map['imageEmoji'] as String? ?? dummyCrop['imageEmoji'] as String? ?? '🌱',
+      unit: map['unit'] as String? ?? dummyCrop['unit'] as String? ?? 'PKR',
     );
   }
 }

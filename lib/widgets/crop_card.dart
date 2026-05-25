@@ -77,6 +77,15 @@ class CropCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
+              const SizedBox(height: 2),
+              Text(
+                '${crop.trend == 'up' ? '🟢' : crop.trend == 'down' ? '🔴' : '⚪'} was ${crop.previousPrice.toStringAsFixed(0)}',
+                style: const TextStyle(
+                  color: kTextLight,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),

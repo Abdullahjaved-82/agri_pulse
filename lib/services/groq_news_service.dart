@@ -45,10 +45,12 @@ class GroqNewsArticle {
 class GroqNewsService {
   GroqNewsService({http.Client? client, FirebaseFirestore? firestore})
       : _client = client ?? http.Client(),
-        _firestore = firestore ?? FirebaseFirestore.instance;
+        _providedFirestore = firestore;
 
   final http.Client _client;
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _providedFirestore;
+
+  FirebaseFirestore get _firestore => _providedFirestore ?? FirebaseFirestore.instance;
 
   static const _cacheHours = 6; // refresh cache every 6 hours
   static const _model = 'llama-3.1-8b-instant';
